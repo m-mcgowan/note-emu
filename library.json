@@ -1,0 +1,27 @@
+{
+  "name": "note-emu",
+  "version": "0.1.0",
+  "description": "Virtual Notecard transport over HTTP (softcard emulation)",
+  "keywords": "notecard, blues, emulator, softcard",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/m-mcgowan/note-emu.git"
+  },
+  "authors": [
+    {
+      "name": "Mat McGowan"
+    }
+  ],
+  "license": "MIT",
+  "frameworks": ["arduino", "*"],
+  "platforms": "*",
+  "headers": "note/emu/emu.h",
+  "build": {
+    "includeDir": "src"
+  },
+  "export": {
+    "include": [
+      "src/*"
+    ]
+  }
+}
