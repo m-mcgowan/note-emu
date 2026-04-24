@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "author": "note-emu",
+  "editor": "wokwi",
+  "parts": [
+    { "id": "uno", "type": "wokwi-arduino-uno", "top": 160, "left": 20 },
+    { "id": "probe", "type": "chip-probe-chip", "top": 0, "left": 200 }
+  ],
+  "connections": [
+    ["uno:GND.1", "probe:GND", "black", []],
+    ["uno:5V", "probe:VCC", "red", []]
+  ]
+}

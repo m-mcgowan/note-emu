@@ -1,0 +1,5 @@
+{
+  "name": "WASI Probe",
+  "author": "note-emu",
+  "pins": ["VCC", "GND"]
+}

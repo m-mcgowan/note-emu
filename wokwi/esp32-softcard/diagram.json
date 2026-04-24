@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "author": "note-emu",
+  "editor": "wokwi",
+  "parts": [
+    {
+      "id": "esp",
+      "type": "board-esp32-s3-devkitc-1",
+      "top": 0,
+      "left": 0,
+      "attrs": { "cpuFrequency": "240" }
+    }
+  ],
+  "connections": [
+    ["esp:TX", "$serialMonitor:RX", "", []],
+    ["esp:RX", "$serialMonitor:TX", "", []]
+  ],
+  "serialMonitor": {
+    "display": "terminal",
+    "newline": "cr"
+  }
+}
