@@ -20,7 +20,7 @@
 
 #include <note/notecard.hpp>
 #include <note/body.hpp>
-#include <note/transport/serial.hpp>
+#include <note/link/serial.hpp>
 
 #include <note_app/channel.hpp>
 #include <note_app/connection_manager.hpp>
@@ -95,9 +95,9 @@ void setup() {
         return;
     }
 
-    // 2. Transport chain: note-emu → SerialHal → NotecardSerial → Notecard
+    // 2. Transport chain: note-emu → SerialHal → SerialFramer → Notecard
     static note::emu::SerialHal hal(*softcard.instance(), millis, delay);
-    using Transport = note::transport::NotecardSerial<>;
+    using Transport = note::link::SerialFramer<>;
     static Transport transport(hal);
     static Transport *tp = &transport;
 

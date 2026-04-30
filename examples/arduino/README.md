@@ -21,7 +21,7 @@ Uses the **note-c** API (`NoteNewRequest`, `NoteRequest`, `NoteRequestResponse`)
 
 ### note_cpp_example
 
-Uses the **note-cpp** typed API. Sets up the transport via `noteemu::SoftcardSerialHal` and `note::transport::NotecardSerial`. This is a skeleton — note-cpp requires a JSON backend implementation for full functionality.
+Uses the **note-cpp** typed API. Sets up the transport via `noteemu::SoftcardSerialHal` and `note::link::SerialFramer`. This is a skeleton — note-cpp requires a JSON backend implementation for full functionality.
 
 ## Setup
 

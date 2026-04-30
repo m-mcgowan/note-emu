@@ -15,8 +15,8 @@
 
 #include <note/notecard.hpp>
 #include <note/api.hpp>
-#include <note/streaming_transport.hpp>
-#include <note/transport/serial.hpp>
+#include <note/protocol.hpp>
+#include <note/link/serial.hpp>
 
 // ── Configuration ──────────────────────────────────────────────────────
 
@@ -65,11 +65,11 @@ void setup() {
     }
 
     // Wire up the transport:
-    //   SerialHal → NotecardSerial → StreamingTransport → Notecard
+    //   SerialHal → SerialFramer → Protocol → Notecard
     // No JSON backend needed — streaming parses directly from the wire.
     static note::emu::SerialHal hal(*softcard.instance(), millis, delay);
-    static note::transport::NotecardSerial<> serial_transport(hal);
-    static note::StreamingTransport transport(serial_transport);
+    static note::link::SerialFramer<> serial_transport(hal);
+    static note::Protocol transport(serial_transport);
     static note::Notecard nc(transport);
 
     // Use the typed API — same as with a physical Notecard

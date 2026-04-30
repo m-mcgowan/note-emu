@@ -5,7 +5,7 @@
 //
 // Two integration paths:
 //   1. note-c:   Install as serial hook callbacks via NoteSetFnSerial()
-//   2. note-cpp: Implement SerialHal for note::transport::NotecardSerial
+//   2. note-cpp: Implement SerialHal for note::link::SerialFramer
 //
 // The library does NOT depend on note-c or note-cpp — it provides the
 // glue layer that either library can consume.

@@ -85,7 +85,7 @@ graph TD
     App["Application code"]
     Api["note::Api — typed requests"]
     NC["note::Notecard"]
-    Transport["note::transport::NotecardSerial"]
+    Transport["note::link::SerialFramer"]
     HAL["note_emu::SoftcardSerialHal"]
     Emu["note_emu_t — HTTP transport"]
     Backend["NoteEmuArduino — WiFi HTTP"]

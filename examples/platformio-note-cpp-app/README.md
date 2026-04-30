@@ -93,7 +93,7 @@ graph TD
     Store["StateStore — shared state"]
     Ch["DirectChannel"]
     NC["note::Notecard"]
-    Transport["NotecardSerial"]
+    Transport["SerialFramer"]
     HAL["SoftcardSerialHal"]
     Emu["note_emu_t"]
     Backend["NoteEmuArduino"]

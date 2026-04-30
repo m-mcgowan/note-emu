@@ -16,7 +16,7 @@ Follows [Keep a Changelog](https://keepachangelog.com/) conventions.
 - Firmware integration tests via USB serial (`test_firmware.py`)
 - note-arduino integration with type-safe Arduino HTTP backend (`NoteEmuArduino`)
 - Error codes (`note_emu_err_t`), logging callbacks, and `note_emu_strerror()`
-- note-cpp SerialHal adapter (`SoftcardSerialHal`) for `NotecardSerial` bridge
+- note-cpp SerialHal adapter (`SoftcardSerialHal`) for `SerialFramer` bridge
 - Integration tests with end-to-end Notehub event verification (`test_softcard.py`)
 - Shared Notehub API helpers (`notehub_api.py`)
 - Core library: HTTP transport, TX/RX buffering, authentication state machine

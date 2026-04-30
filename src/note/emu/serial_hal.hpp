@@ -12,17 +12,17 @@
 //   note::emu::Arduino softcard(NOTEHUB_PAT);
 //   softcard.begin(wifiClient);
 //   note::emu::SerialHal hal(*softcard.instance(), millis, delay);
-//   note::transport::NotecardSerial<> transport(hal);
+//   note::link::SerialFramer<> transport(hal);
 
 #pragma once
 
 #include "emu.h"
 
-#include <note/transport/serial.hpp>
+#include <note/link/serial.hpp>
 
 namespace note::emu {
 
-class SerialHal : public note::transport::SerialHal {
+class SerialHal : public note::link::SerialHal {
 public:
     using MillisFn = uint32_t (*)();
     using DelayFn  = void (*)(uint32_t);

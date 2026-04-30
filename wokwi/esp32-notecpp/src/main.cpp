@@ -5,8 +5,8 @@
 //
 // Transport chain (streaming path — recommended):
 //   note::emu::SerialHal          (HTTP to softcard)
-//     → note::transport::NotecardSerial  (TransportHal)
-//       → note::StreamingTransport        (IStreamingTransport)
+//     → note::link::SerialFramer  (Hal)
+//       → note::Protocol           (ITransact)
 //         → note::Notecard                (streaming, no backend needed)
 
 #include <Arduino.h>
@@ -18,8 +18,8 @@
 
 #include <note/notecard.hpp>
 #include <note/api.hpp>
-#include <note/streaming_transport.hpp>
-#include <note/transport/serial.hpp>
+#include <note/protocol.hpp>
+#include <note/link/serial.hpp>
 #include <note/debug.hpp>
 
 #include "secrets.h"
@@ -57,8 +57,8 @@ void setup() {
 
     // 2. Wire up the streaming transport stack
     static note::emu::SerialHal hal(*softcard.instance(), millis, delay);
-    static note::transport::NotecardSerial<> serial_hal(hal);
-    static note::StreamingTransport transport(serial_hal);
+    static note::link::SerialFramer<> serial_hal(hal);
+    static note::Protocol transport(serial_hal);
     static note::Notecard nc(transport);
 
     // ── Per-transaction profiling ──────────────────────────────────

@@ -10,7 +10,7 @@ The standard Blues Arduino API with a virtual Notecard. Uses `note::emu::Arduino
 
 ### [platformio-notecpp](platformio-notecpp/) — note-cpp (C++23)
 
-Type-safe note-cpp API with the streaming transport. Uses `note::emu::SerialHal` to bridge to `note::transport::NotecardSerial`. Demonstrates `note::Api` with typed requests and responses.
+Type-safe note-cpp API with the streaming transport. Uses `note::emu::SerialHal` to bridge to `note::link::SerialFramer`. Demonstrates `note::Api` with typed requests and responses.
 
 ### [platformio-note-cpp-app](platformio-note-cpp-app/) — note-cpp-app framework
 
