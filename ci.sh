@@ -57,8 +57,9 @@ for example in \
     run "pio $example" bash -c "set -o pipefail; cd $example && pio run -e wokwi 2>&1 | tail -15"
 done
 
-# Examples that depend on note-cpp (symlinked from ~/e/note-cpp)
-if [[ -d "$HOME/e/note-cpp/src" ]]; then
+# Examples that depend on note-cpp.
+# Set NOTE_CPP_PATH to the absolute path of a local note-cpp checkout to enable them.
+if [[ -n "${NOTE_CPP_PATH:-}" && -d "$NOTE_CPP_PATH/src" ]]; then
     for example in \
         wokwi/esp32-notecpp \
         examples/platformio-notecpp \
@@ -66,11 +67,11 @@ if [[ -d "$HOME/e/note-cpp/src" ]]; then
         run "pio $example" bash -c "set -o pipefail; cd $example && pio run 2>&1 | tail -15"
     done
 else
-    echo "SKIP: note-cpp examples (~/e/note-cpp not found)"
+    echo "SKIP: note-cpp examples (set NOTE_CPP_PATH to a local note-cpp checkout to enable)"
 fi
 
-# note-cpp-app example is optional (depends on ~/e/note-cpp-app)
-# Build manually: cd examples/platformio-note-cpp-app && pio run
+# note-cpp-app example additionally requires note-cpp-app at NOTE_CPP_APP_PATH.
+# Build manually: NOTE_CPP_PATH=... NOTE_CPP_APP_PATH=... pio run -d examples/platformio-note-cpp-app
 
 # ── Arduino library examples (via compat-check) ─────────────────────
 # Verifies the arduino/ sketches compile as a proper Arduino library,

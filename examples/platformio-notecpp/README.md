@@ -16,8 +16,15 @@ Type-safe C++23 Notecard API over a virtual Notecard. Uses note-cpp's generated 
 2. PlatformIO installed
 3. A [Notehub](https://notehub.io) account with a project
 4. A Notehub Personal Access Token (PAT)
+5. A local [note-cpp](https://github.com/m-mcgowan/note-cpp) checkout, with `NOTE_CPP_PATH` exported to its absolute path
 
 ## Setup
+
+Point `platformio.ini` at your note-cpp checkout:
+
+```sh
+export NOTE_CPP_PATH=/abs/path/to/note-cpp
+```
 
 Copy the secrets template and fill in your values:
 

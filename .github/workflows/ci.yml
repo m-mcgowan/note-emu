@@ -22,10 +22,8 @@ jobs:
           repository: m-mcgowan/note-cpp
           path: note-cpp
 
-      - name: Link note-cpp to ci.sh's expected location
-        run: |
-          mkdir -p "$HOME/e"
-          ln -s "$GITHUB_WORKSPACE/note-cpp" "$HOME/e/note-cpp"
+      - name: Export NOTE_CPP_PATH for ci.sh and platformio.ini
+        run: echo "NOTE_CPP_PATH=$GITHUB_WORKSPACE/note-cpp" >> "$GITHUB_ENV"
 
       - name: Stub gitignored secrets from .example templates
         working-directory: note-emu

@@ -13,7 +13,7 @@ A virtual-Notecard transport for the [note-c](https://github.com/blues/note-ardu
 Fastest way to see it working — a simulated ESP32 in your browser talks to the real softcard service:
 
 - [`wokwi/esp32-softcard/`](wokwi/esp32-softcard/) — note-c integration
-- [`wokwi/esp32-notecpp/`](wokwi/esp32-notecpp/) — note-cpp integration
+- [`wokwi/esp32-notecpp/`](wokwi/esp32-notecpp/) — note-cpp integration (needs a local note-cpp checkout — see [note-cpp examples](#note-cpp-examples))
 
 Open in VS Code with the [Wokwi extension](https://marketplace.visualstudio.com/items?itemName=wokwi.wokwi-vscode), copy `src/secrets.h.example` → `src/secrets.h`, add your Notehub PAT, and run `pio run -e wokwi` then start the Wokwi simulator. **Tip:** `diagram.json` already sets `"cpuFrequency": "240"` — Wokwi's default 8 MHz makes TLS handshakes ~30x slower.
 
@@ -73,6 +73,17 @@ make -C examples/native
 ```
 
 **Optional dependencies:** note-cpp is only needed if you include `serial_hal.hpp`. The C core, Arduino wrapper, and libcurl backend have no note-cpp dependency.
+
+### note-cpp examples
+
+The `platformio-notecpp`, `platformio-note-cpp-app`, and `wokwi/esp32-notecpp` projects expect a local note-cpp checkout. Their `platformio.ini` files resolve the dependency from environment variables:
+
+```sh
+export NOTE_CPP_PATH=/abs/path/to/note-cpp
+export NOTE_CPP_APP_PATH=/abs/path/to/note-cpp-app  # only for platformio-note-cpp-app
+```
+
+`ci.sh` skips these examples when `NOTE_CPP_PATH` is unset, so the rest of the build still runs without note-cpp available.
 
 ## Architecture
 

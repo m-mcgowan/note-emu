@@ -17,8 +17,16 @@ Application-level Notecard framework over a virtual Notecard. Uses note-cpp-app'
 2. PlatformIO installed
 3. A [Notehub](https://notehub.io) account with a project
 4. A Notehub Personal Access Token (PAT)
+5. Local checkouts of [note-cpp](https://github.com/m-mcgowan/note-cpp) and [note-cpp-app](https://github.com/m-mcgowan/note-cpp-app), with `NOTE_CPP_PATH` and `NOTE_CPP_APP_PATH` exported to their absolute paths
 
 ## Setup
+
+Point `platformio.ini` at your local checkouts:
+
+```sh
+export NOTE_CPP_PATH=/abs/path/to/note-cpp
+export NOTE_CPP_APP_PATH=/abs/path/to/note-cpp-app
+```
 
 Copy the secrets template and fill in your values:
 
