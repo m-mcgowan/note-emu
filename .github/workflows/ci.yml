@@ -16,13 +16,19 @@ jobs:
         with:
           path: note-emu
 
+      # Best-effort: note-cpp is currently a private repo, so the default
+      # GITHUB_TOKEN can't clone it. If the checkout fails the job continues
+      # and ci.sh's NOTE_CPP_PATH guard skips the note-cpp example builds.
       - name: Checkout note-cpp (for note-cpp examples)
+        id: checkout_note_cpp
+        continue-on-error: true
         uses: actions/checkout@v4
         with:
           repository: m-mcgowan/note-cpp
           path: note-cpp
 
       - name: Export NOTE_CPP_PATH for ci.sh and platformio.ini
+        if: steps.checkout_note_cpp.outcome == 'success'
         run: echo "NOTE_CPP_PATH=$GITHUB_WORKSPACE/note-cpp" >> "$GITHUB_ENV"
 
       - name: Stub gitignored secrets from .example templates
