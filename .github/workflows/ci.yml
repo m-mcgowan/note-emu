@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout note-emu
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           path: note-emu
 
@@ -22,7 +22,7 @@ jobs:
       - name: Checkout note-cpp (for note-cpp examples)
         id: checkout_note_cpp
         continue-on-error: true
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: m-mcgowan/note-cpp
           path: note-cpp
@@ -48,7 +48,7 @@ jobs:
           sudo apt-get install -y cmake build-essential libcurl4-openssl-dev
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.11"
 
@@ -58,7 +58,7 @@ jobs:
           python -m pip install platformio
 
       - name: Cache PlatformIO packages
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ~/.platformio/.cache
