@@ -7,7 +7,7 @@
 #   make clean            Remove build artifacts
 
 CC       ?= cc
-CFLAGS   ?= -std=c11 -Wall -Wextra -O2
+CFLAGS   ?= -std=c11 -Wall -Wextra -Wpedantic -Werror -O2
 SRCDIR    = ../../src
 
 CURL_CFLAGS := $(shell curl-config --cflags 2>/dev/null)
