@@ -50,10 +50,24 @@ The Notecard echoes the `id` back. Because the transport is sequential (one outs
 
 ## Instance lifecycle
 
-Empirically unclear:
+**Auto-provisioning (observed).** softcard spins up the virtual Notecard instance on
+first contact — no need to start it from the browser UI first. The cold start is slow:
+on the first `card.version` of a fresh session, the initial `/v1/read` long-poll produced
+no data and the client hit its 30 s read timeout (`NOTE_EMU_READ_TIMEOUT_MS`), so note-c
+resent the request; the retry returned in ~130 ms. Steady-state round-trips are then
+~250 ms. A back-to-back second run had a fast first request (~1.5 s, no timeout), so the
+instance stays warm for some window between sessions. (An earlier experiment with a
+never-used UID saw a 504 instead of a client-side timeout — the exact cold-start failure
+mode may vary.)
 
-- **Auto-provisioning.** When `note-emu` first POSTs to `/v1/read` for a UID, does softcard spin up a fresh instance, or must the simulator have been started from the browser UI first? A 504 timeout was observed during early experiments with a never-used UID; once the same UID had been opened in `dev.blues.io`, the API worked. Worth verifying.
-- **Idle expiry.** No documented session timeout — long-running tests have not surfaced one yet, but this is not proven.
+Practical implication: budget for one slow (~30 s) request at the start of a cold session,
+or issue a throwaway warm-up request during setup so the application's first real
+transaction is fast.
+
+Still unverified:
+
+- **Idle expiry.** No documented session timeout — the warm window above exists but its
+  length isn't characterized.
 - **Concurrent clients.** Behavior when both a browser and `note-emu` connect to the same UID is unverified.
 
 ## CORS
