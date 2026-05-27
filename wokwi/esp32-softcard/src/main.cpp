@@ -88,6 +88,8 @@ void setup() {
     }
 
     Serial.println("READY");
+    Serial.println("Type a Notecard request as JSON and press Enter, e.g. {\"req\":\"card.temp\"}");
+    Serial.print("> ");
 }
 
 // ── Loop (interactive serial command) ───────────────────────────────
@@ -119,6 +121,7 @@ void loop() {
                     }
                 }
                 line_pos = 0;
+                Serial.print("> ");
             }
         } else if (line_pos < sizeof(line_buf) - 1) {
             line_buf[line_pos++] = c;
