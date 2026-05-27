@@ -69,13 +69,19 @@ on wokwi.com. To mint/refresh it:
 
 1. Create a new ESP32-S3 project on wokwi.com.
 2. Paste `src/main.cpp` as the sketch and replace `diagram.json` with this one.
-3. Add a `libraries.txt`:
+3. Add a `secrets.h` (placeholder values — Wokwi projects are public, so don't commit a
+   real Notehub PAT; users supply their own).
+4. Add a `libraries.txt`:
    ```
    Blues Wireless Notecard
-   # note-emu: until it's on the Arduino Library Manager, add it by GitHub URL:
-   # https://github.com/m-mcgowan/note-emu
+   note-emu
    ```
-4. Save, copy the `/projects/<id>` from the URL, and drop it into the badge link at
+   **`note-emu` only resolves once it's published to the Arduino Library Manager.**
+   Wokwi's `libraries.txt` accepts Library-Manager names and Wokwi-hosted uploads
+   (`note-emu@wokwi:<id>`, a paid Wokwi Club feature) — *not* GitHub URLs. Until note-emu
+   is on the registry, either upload it via the Arduino-library "+" → "Upload a Library"
+   button, or vendor its `note/emu/*` sources into the project directly.
+5. Save, copy the `/projects/<id>` from the URL, and drop it into the badge link at
    the top of this file.
 
 Keep the hosted copy in sync by re-pasting after meaningful changes to `main.cpp`
