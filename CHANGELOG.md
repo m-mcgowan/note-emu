@@ -3,6 +3,25 @@
 All notable changes to this project will be documented in this file.
 Follows [Keep a Changelog](https://keepachangelog.com/) conventions.
 
+## [0.2.0] - 2026-05-27
+
+### Added
+- `docs/softcard-protocol.md` documenting the softcard HTTP wire protocol (endpoints, headers, PAT→UID resolution, Notecard framing, and observed instance auto-provisioning / cold-start behavior)
+- `wokwi/esp32-softcard/README.md` quickstart with a "Simulate in Wokwi" badge scaffold and run/iteration instructions
+- Interactive `> ` prompt and usage hint after `READY` in the esp32-softcard Wokwi example so users know they can type JSON Notecard requests
+
+### Changed
+- note-cpp examples now resolve the dependency from `NOTE_CPP_PATH` (and `NOTE_CPP_APP_PATH` for the note-cpp-app example) instead of a hardcoded `${HOME}/e/note-cpp` symlink path; `ci.sh` skips those builds when the variable is unset
+- Tracked note-cpp transport-layer renames across examples (`note::transport::` → `note::link::`, `SerialFramer`, etc.)
+- Native demo and unit-test builds compile under `-Wpedantic -Werror` with strict `-std=c11`/`-std=c++17` to catch portability issues locally
+- CI: bumped `actions/checkout` v4→v6, `actions/cache` v4→v5, `actions/setup-python` v5→v6 off the deprecated Node 20 runtime
+
+### Removed
+- `PLAN.md` — superseded by the README and `docs/softcard-protocol.md`; durable protocol notes were extracted before removal
+
+### Fixed
+- CI no longer aborts when the private note-cpp repo can't be checked out — the step is best-effort and the note-cpp examples skip gracefully
+
 ## [0.1.0] - 2026-04-23
 
 ### Added
