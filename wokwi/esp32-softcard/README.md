@@ -33,6 +33,13 @@ RSP: {"total":1}
 
 Unparseable input prints `ERR: invalid JSON`.
 
+> **WiFi can be slow or flaky in the browser.** The web simulator joins `Wokwi-GUEST`
+> through Wokwi's free, shared **public gateway**, which is capacity-limited — association
+> can take a while, and sometimes a run simply won't connect (the `WiFi...` dots never
+> finish). This is a Wokwi free-plan limitation, not a note-emu issue: a bare WiFi-only
+> sketch shows the same behavior. If a run hangs on WiFi, just restart the simulation. For
+> reliable runs, use the **VS Code Wokwi extension** (see below) or real hardware.
+
 > **First request is slow (~30 s).** softcard provisions your virtual Notecard instance on
 > first contact; the initial `/v1/read` long-poll can exceed the 30 s read timeout and
 > retry once. Subsequent requests are ~250 ms, and the instance stays warm between runs.
