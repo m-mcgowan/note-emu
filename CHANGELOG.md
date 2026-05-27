@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 Follows [Keep a Changelog](https://keepachangelog.com/) conventions.
 
+## [0.2.1] - 2026-05-27
+
+### Fixed
+- `<note-emu.h>` now pulls in the C++ Arduino wrapper (`note::emu::Arduino`), not just the C core. In 0.2.0 the umbrella included only `note/emu/emu.h`, so a sketch using `note::emu::Arduino` via `<note-emu.h>` failed to compile. Arduino sketches (incl. Wokwi) should include `<note-emu.h>` — Arduino's library auto-detection only adds a library to the include path from a `.h` include, so a bare `<note/emu/arduino.hpp>` isn't found ([Arduino #5441](https://github.com/arduino/Arduino/issues/5441)).
+
+### Removed
+- Stale backward-compat shim headers in `src/` root (`note_emu.h`, `note_emu_arduino.{h,cpp}`, `note_emu_curl.{h,c}`, `note_emu_serial_hal.hpp`, `note_emu.c`) left over from the namespace migration — note-emu had no prior release, so nothing depended on them.
+
 ## [0.2.0] - 2026-05-27
 
 ### Added
