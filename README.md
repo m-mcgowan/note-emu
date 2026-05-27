@@ -66,11 +66,14 @@ make -C examples/native
 ## Headers
 
 ```cpp
+#include <note-emu.h>               // Arduino entry point — C core + note::emu::Arduino
 #include <note/emu/emu.h>           // C core API
 #include <note/emu/arduino.hpp>     // Arduino wrapper (note::emu::Arduino)
 #include <note/emu/serial_hal.hpp>  // note-cpp SerialHal adapter (requires note-cpp)
 #include <note/emu/curl.h>          // libcurl backend (native)
 ```
+
+**Arduino IDE / Wokwi users:** include `<note-emu.h>`, not `<note/emu/arduino.hpp>` directly. Arduino's library auto-detection only adds a library to the include path when it sees a `.h` include from it, so a bare `.hpp` include fails to resolve ([Arduino #5441](https://github.com/arduino/Arduino/issues/5441)). `<note-emu.h>` pulls in the C core and, on Arduino, `note::emu::Arduino`. (PlatformIO uses explicit `lib_deps`, so any of these includes work there.)
 
 **Optional dependencies:** note-cpp is only needed if you include `serial_hal.hpp`. The C core, Arduino wrapper, and libcurl backend have no note-cpp dependency.
 

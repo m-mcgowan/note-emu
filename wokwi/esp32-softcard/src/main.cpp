@@ -11,7 +11,7 @@
 #include <WiFiClientSecure.h>
 #include <Notecard.h>
 
-#include <note/emu/arduino.hpp>
+#include <note-emu.h>
 #include "secrets.h"
 
 // ── Globals ─────────────────────────────────────────────────────────
