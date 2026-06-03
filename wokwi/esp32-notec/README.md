@@ -1,5 +1,4 @@
-<!-- TODO: replace <PROJECT_ID> once the project is saved on wokwi.com (see "Publishing the badge" below). -->
-[![Simulate in Wokwi](https://img.shields.io/badge/Simulate-Wokwi-AAB42F?logo=espressif)](https://wokwi.com/projects/<PROJECT_ID>)
+[![Simulate in Wokwi](https://img.shields.io/badge/Simulate-Wokwi-AAB42F?logo=espressif)](https://wokwi.com/projects/465203727626487809)
 
 # esp32-notec — note-emu on Wokwi (note-c)
 
