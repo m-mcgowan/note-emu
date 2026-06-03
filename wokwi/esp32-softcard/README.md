@@ -66,8 +66,8 @@ Then either:
   ```sh
   wokwi-cli --timeout 30000 --expect-text "READY" .
   ```
-  A local `wokwi-ci-server` (Docker) avoids burning cloud minutes — see
-  `../spike/run-probe.sh` for the pattern.
+  Set `WOKWI_CLI_SERVER=ws://localhost:9177` and run a local Docker
+  `wokwi-ci-server` to avoid burning cloud minutes.
 
 ## Publishing the badge
 
