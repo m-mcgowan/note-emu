@@ -13,7 +13,10 @@
 #include <WiFi.h>
 #include <WiFiClientSecure.h>
 
-#include <note/emu/arduino.hpp>
+// <note-emu.h> is the public ".h" umbrella; it triggers Arduino's library
+// auto-detection (Arduino #5441 — a bare ".hpp" include is never detected)
+// and pulls in note::emu::Arduino. note-cpp's SerialHal adapter then resolves.
+#include <note-emu.h>
 #include <note/emu/serial_hal.hpp>
 
 #include <note/notecard.hpp>
@@ -38,7 +41,7 @@ void setup() {
 
     // WiFi
     Serial.print("WiFi...");
-    WiFi.begin(WIFI_SSID, WIFI_PASS);
+    WiFi.begin(WIFI_SSID, WIFI_PASS, 6);  // channel 6 — skip the scan that hangs in the Wokwi web sim
     while (WiFi.status() != WL_CONNECTED) {
         delay(500);
         Serial.print(".");
