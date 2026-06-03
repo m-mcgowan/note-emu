@@ -1,6 +1,7 @@
 # note-emu
 
 [![CI](https://github.com/m-mcgowan/note-emu/actions/workflows/ci.yml/badge.svg)](https://github.com/m-mcgowan/note-emu/actions/workflows/ci.yml)
+[![Simulate in Wokwi](https://img.shields.io/badge/Simulate-Wokwi-AAB42F?logo=espressif)](https://wokwi.com/projects/465203727626487809)
 
 A virtual-Notecard transport for the [note-c](https://github.com/blues/note-arduino) and [note-cpp](https://github.com/m-mcgowan/note-cpp) libraries. Plugs into their existing serial-hook interfaces and speaks to Blues' cloud-hosted Notecard simulator ("softcard") over HTTP, so your firmware can exercise the real Notecard API before your hardware arrives.
 
