@@ -52,7 +52,7 @@ done
 
 # Wokwi projects have multiple envs — only build the wokwi env in CI
 for example in \
-    wokwi/esp32-softcard \
+    wokwi/esp32-notec \
 ; do
     run "pio $example" bash -c "set -o pipefail; cd $example && pio run -e wokwi 2>&1 | tail -15"
 done

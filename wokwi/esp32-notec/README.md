@@ -1,7 +1,7 @@
 <!-- TODO: replace <PROJECT_ID> once the project is saved on wokwi.com (see "Publishing the badge" below). -->
 [![Simulate in Wokwi](https://img.shields.io/badge/Simulate-Wokwi-AAB42F?logo=espressif)](https://wokwi.com/projects/<PROJECT_ID>)
 
-# esp32-softcard — note-emu on Wokwi (note-c)
+# esp32-notec — note-emu on Wokwi (note-c)
 
 A simulated ESP32-S3 that talks to the **real** Blues softcard service over Wokwi's
 virtual WiFi — no physical Notecard, no hardware at all. The firmware uses the
