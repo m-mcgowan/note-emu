@@ -93,6 +93,24 @@ def read_response(headers):
     return (body if status == 200 else b""), time.time() - t0
 
 
+def parse_and_validate(body):
+    """Parse a softcard response. Returns (version, error_msg).
+    version is None and error_msg explains why on any failure (non-JSON,
+    explicit "err" field, missing/malformed version)."""
+    if not body:
+        return None, "empty response body"
+    try:
+        rsp = json.loads(body.decode().strip())
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return None, f"response not valid JSON: {body[:200]!r}"
+    if "err" in rsp:
+        return None, f"softcard error: {rsp['err']!r} (body: {body[:200]!r})"
+    version = rsp.get("version", "")
+    if not re.match(r"notecard-\d+\.\d+\.\d+\.\d+$", version):
+        return None, f"unexpected version format {version!r} (body: {body[:200]!r})"
+    return version, None
+
+
 def main():
     pat = os.environ.get("NOTEHUB_PAT")
     if not pat:
@@ -106,32 +124,24 @@ def main():
     }
     request_body = b'{"req":"card.version"}\n'
 
-    print("2. POST /v1/write (card.version)...")
-    write_request(softcard_headers, request_body)
-    print(f"   OK ({len(request_body)} bytes sent)")
-
-    print(f"3. POST /v1/read (long-poll, {READ_TIMEOUT_S}s timeout)...")
-    body, elapsed = read_response(softcard_headers)
-    if not body:
-        # Cold-start: softcard provisions the instance on first contact and the
-        # initial long-poll commonly exceeds the read timeout. note-c handles
-        # this by retrying the whole transaction; mirror that here.
-        print(f"   cold-start: first read empty after {elapsed:.1f}s, retrying once")
+    def round_trip():
+        """One write+read+validate transaction. Returns (version, err, elapsed)."""
         write_request(softcard_headers, request_body)
         body, elapsed = read_response(softcard_headers)
-        if not body:
-            fail(f"/v1/read empty after retry ({elapsed:.1f}s)")
-    print(f"   OK ({len(body)} bytes, {elapsed:.1f}s)")
+        version, err = parse_and_validate(body)
+        return version, err, elapsed
 
-    print("4. Parse response and check shape...")
-    try:
-        rsp = json.loads(body.decode().strip())
-    except (json.JSONDecodeError, UnicodeDecodeError):
-        fail(f"response not valid JSON line: {body[:200]!r}")
-    version = rsp.get("version", "")
-    if not re.match(r"notecard-\d+\.\d+\.\d+\.\d+$", version):
-        fail(f"unexpected version format: {version!r}")
-    print(f"   OK notecard firmware: {version}")
+    print("2. softcard round-trip (card.version)...")
+    version, err, elapsed = round_trip()
+    if err:
+        # One transaction-level retry — mirrors note-c. Covers both cold-start
+        # empty reads and transient softcard error responses. A genuine contract
+        # break will still fail the second attempt.
+        print(f"   first attempt: {err} (in {elapsed:.1f}s) — retrying once")
+        version, err, elapsed = round_trip()
+        if err:
+            fail(f"retry also failed: {err} (in {elapsed:.1f}s)")
+    print(f"   OK ({elapsed:.1f}s) notecard firmware: {version}")
 
     print("\nAll endpoint checks passed.")
 
