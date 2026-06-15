@@ -68,6 +68,22 @@ void setup() {
         note_emu_serial_receive
     );
 
+    // Optional: bind the virtual Notecard to a Notehub project so it appears
+    // under that project's Devices tab. Define NOTEHUB_PRODUCT in secrets.h
+    // (reverse-DNS ProductUID, e.g. "com.your-co.you:my-project") to enable.
+#ifdef NOTEHUB_PRODUCT
+    {
+        Serial.printf("hub.set product=%s mode=continuous...", NOTEHUB_PRODUCT);
+        J *req = NoteNewRequest("hub.set");
+        JAddStringToObject(req, "product", NOTEHUB_PRODUCT);
+        JAddStringToObject(req, "mode",    "continuous");
+        J *rsp = NoteRequestResponse(req);
+        const char *err = rsp ? JGetString(rsp, "err") : "no response";
+        Serial.println((!err || !*err) ? " OK" : err);
+        NoteDeleteResponse(rsp);
+    }
+#endif
+
     // Run 5 iterations for a profiling comparison against the note-cpp version.
     constexpr int ITERATIONS = 5;
     for (int i = 1; i <= ITERATIONS; i++) {
