@@ -48,7 +48,7 @@ pio device monitor
 ```
 note-emu + note-arduino example
 WiFi.... connected: 192.168.1.42
-Softcard version: notecard-softcard-1.0.0
+Softcard version: notecard-11.1.1.1301
 Device: dev:soft:a8f1385c-...
 Softcard temp: 23.00 C
 Softcard temp: 23.00 C

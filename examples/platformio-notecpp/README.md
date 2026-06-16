@@ -34,11 +34,12 @@ cp src/secrets.h.example src/secrets.h
 
 Edit `src/secrets.h`:
 
+<!-- snippet:examples/platformio-notecpp/src/secrets.h.example:4-7 -->
 ```cpp
-#define WIFI_SSID     "your-wifi-ssid"
-#define WIFI_PASS     "your-wifi-password"
-#define NOTEHUB_PAT   "your-notehub-pat"
-#define PRODUCT_UID   "com.example.your-project"
+#define WIFI_SSID "your-ssid"
+#define WIFI_PASS "your-password"
+#define NOTEHUB_PAT "your-notehub-api-token"
+#define PRODUCT_UID "your-product-uid"
 ```
 
 ## Build and flash
@@ -59,7 +60,7 @@ note-emu: softcard session established
 hub.set OK
 card.version:
   device:  dev:xxxxxxxxxxxx
-  version: notecard-7.2.2.16184
+  version: notecard-11.1.1.1301
 
 READY
 
