@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# Pre-commit hook — verifies documentation snippets are in sync with their
+# source files. Blocks the commit if any are out of sync.
+#
+# Enable in your local clone (one-time):
+#   git config core.hooksPath .githooks
+#
+# To skip on a particular commit (for WIP or doc-only changes you'll fix in a
+# follow-up):  git commit --no-verify
+set -euo pipefail
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+exec "$REPO_ROOT/tools/verify-docs.sh"

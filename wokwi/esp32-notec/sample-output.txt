@@ -1,0 +1,37 @@
+press enter to start...
+note-emu benchmark
+WiFi....... connected: 10.13.37.2
+note-emu: connecting to https://softcard.blues.com
+note-emu: resolving account UID from PAT via billing-accounts API
+note-emu: billing-accounts -> rc=0 http=200 [724 ms]
+note-emu: resolved account UID: 00000000-0000-0000-0000-000000000000
+note-emu: ready (uid=00000000-0000-0000-0000-000000000000)
+hub.set product=com.example.you:notec-demo mode=continuous... OK
+=== iteration 1/5 ===
+note-emu: POST /v1/write (46 bytes) -> rc=0 http=200 [685 ms]
+note-emu: POST /v1/read -> rc=0 http=200 bytes=384 [132 ms]
+PROFILE req=card.version total=1568
+  version = notecard-11.1.1.1301
+=== iteration 2/5 ===
+note-emu: POST /v1/write (46 bytes) -> rc=0 http=200 [123 ms]
+note-emu: POST /v1/read -> rc=0 http=200 bytes=384 [122 ms]
+PROFILE req=card.version total=246
+  version = notecard-11.1.1.1301
+=== iteration 3/5 ===
+note-emu: POST /v1/write (46 bytes) -> rc=0 http=200 [153 ms]
+note-emu: POST /v1/read -> rc=0 http=200 bytes=384 [112 ms]
+PROFILE req=card.version total=266
+  version = notecard-11.1.1.1301
+=== iteration 4/5 ===
+note-emu: POST /v1/write (46 bytes) -> rc=0 http=200 [163 ms]
+note-emu: POST /v1/read -> rc=0 http=200 bytes=384 [132 ms]
+PROFILE req=card.version total=296
+  version = notecard-11.1.1.1301
+=== iteration 5/5 ===
+note-emu: POST /v1/write (46 bytes) -> rc=0 http=200 [153 ms]
+note-emu: POST /v1/read -> rc=0 http=200 bytes=384 [132 ms]
+PROFILE req=card.version total=286
+  version = notecard-11.1.1.1301
+READY
+Type a Notecard request as JSON and press Enter, e.g. {"req":"card.temp"}
+>

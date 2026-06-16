@@ -23,6 +23,12 @@ run() {
     fi
 }
 
+# ── Documentation ───────────────────────────────────────────────────
+
+run "snippet verification" bash -c '
+    ./tools/verify-docs.sh
+'
+
 # ── Unit tests ──────────────────────────────────────────────────────
 
 run "unit tests" bash -c '
