@@ -3,12 +3,14 @@
 // Connects to Blues' softcard service (softcard.blues.com) to emulate a
 // physical Notecard. Platform-agnostic core with a pluggable HTTP backend.
 //
-// Two integration paths:
-//   1. note-c:   Install as serial hook callbacks via NoteSetFnSerial()
-//   2. note-cpp: Implement SerialHal for note::link::SerialFramer
+// The core (note_emu_t, note_emu_proto_*) is note-emu's own design and
+// doesn't depend on note-c or note-cpp. Two compatibility layers ride
+// on top:
 //
-// The library does NOT depend on note-c or note-cpp — it provides the
-// glue layer that either library can consume.
+//   1. note-c:   bare note_emu_serial_* functions shaped to note-c's
+//                NoteSetFnSerial() hook signatures.
+//   2. note-cpp: note::emu::SerialHal (in serial_hal.hpp) implementing
+//                note-cpp's note::link::SerialHal interface.
 
 #pragma once
 
