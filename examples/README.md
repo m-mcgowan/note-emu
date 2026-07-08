@@ -12,10 +12,6 @@ The standard Blues Arduino API with a virtual Notecard. Uses `note::emu::Arduino
 
 Type-safe note-cpp API with the streaming transport. Uses `note::emu::SerialHal` to bridge to `note::link::SerialFramer`. Demonstrates `note::Api` with typed requests and responses.
 
-### [platformio-note-cpp-app](platformio-note-cpp-app/) — note-cpp-app framework
-
-Application framework built on note-cpp. Demonstrates `ConnectionManager`, `NotePublisher`, `EnvVar`/`EnvGroup`, and `DirectChannel`. For complex IoT applications.
-
 ### [platformio](platformio/) — note-c raw API
 
 PlatformIO version of the Arduino note-c sketch. Uses the note-emu C API directly with a hand-written HTTP callback.

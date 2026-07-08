@@ -76,9 +76,6 @@ else
     echo "SKIP: note-cpp examples (set NOTE_CPP_PATH to a local note-cpp checkout to enable)"
 fi
 
-# note-cpp-app example additionally requires note-cpp-app at NOTE_CPP_APP_PATH.
-# Build manually: NOTE_CPP_PATH=... NOTE_CPP_APP_PATH=... pio run -d examples/platformio-note-cpp-app
-
 # ── Arduino library examples (via compat-check) ─────────────────────
 # Verifies the arduino/ sketches compile as a proper Arduino library,
 # across multiple C++ standards. Requires embedded-cpp-compat-check.
