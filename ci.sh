@@ -63,18 +63,16 @@ for example in \
     run "pio $example" bash -c "set -o pipefail; cd $example && pio run -e wokwi 2>&1 | tail -15"
 done
 
-# Examples that depend on note-cpp.
-# Set NOTE_CPP_PATH to the absolute path of a local note-cpp checkout to enable them.
-if [[ -n "${NOTE_CPP_PATH:-}" && -d "$NOTE_CPP_PATH/src" ]]; then
-    for example in \
-        wokwi/esp32-notecpp \
-        examples/platformio-notecpp \
-    ; do
-        run "pio $example" bash -c "set -o pipefail; cd $example && pio run 2>&1 | tail -15"
-    done
-else
-    echo "SKIP: note-cpp examples (set NOTE_CPP_PATH to a local note-cpp checkout to enable)"
-fi
+# Examples that depend on note-cpp. Their platformio.ini pulls note-cpp
+# from git (see the lib_deps note-cpp= line), so no local checkout is
+# needed. To iterate against a local checkout, temporarily edit the
+# platformio.ini to use a symlink:// URL.
+for example in \
+    wokwi/esp32-notecpp \
+    examples/platformio-notecpp \
+; do
+    run "pio $example" bash -c "set -o pipefail; cd $example && pio run 2>&1 | tail -15"
+done
 
 # ── Arduino library examples (via compat-check) ─────────────────────
 # Verifies the arduino/ sketches compile as a proper Arduino library,
