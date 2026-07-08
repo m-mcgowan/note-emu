@@ -17,7 +17,7 @@ Both endpoints emulate a serial port — they do not parse JSON themselves. The 
 
 Every softcard request carries:
 
-- `X-User-UID: <notehub-account-uid>` — routing key identifying which virtual Notecard instance to talk to. Format `user:abc123…`.
+- `X-User-UID: <notehub-account-uid>` — routing key identifying which virtual Notecard instance to talk to. Format is a UUID (e.g. `00000000-0000-0000-0000-000000000000`), obtained from `/v1/billing-accounts` (see below).
 - `Authorization: Bearer <pat>` — Notehub Personal Access Token. `note-emu` always sends this when an `api_token` is configured (`src/note/emu/emu.c`, `build_headers`). When the username/password fallback is used instead, a `Cookie: <session>` header (from `auth/login`) replaces the bearer header.
 
 ## Resolving `X-User-UID` from a PAT
@@ -29,7 +29,7 @@ GET https://api.notefile.net/v1/billing-accounts
 Authorization: Bearer <pat>
 ```
 
-The response is JSON; the first `"uid":"…"` value is taken as the account UID and used for `X-User-UID` thereafter.
+The response is JSON of the form `{"billing_accounts":[{"uid":"…",…},…]}` (as of 2026-05). `note-emu` takes the first `"uid"` value it sees and uses it for `X-User-UID` thereafter — tolerant of a bare list or top-level `uid` field if the shape changes back.
 
 ## Notecard framing
 

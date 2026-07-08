@@ -121,4 +121,4 @@ graph TD
 
 - [note-cpp](https://github.com/m-mcgowan/note-cpp) — the typed API library
 - [platformio-notecard](../platformio-notecard/) — same concept using note-arduino (note-c API)
-- [PLAN.md](../../PLAN.md) — protocol details
+- [docs/softcard-protocol.md](../../docs/softcard-protocol.md) — softcard HTTP wire protocol details
