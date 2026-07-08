@@ -6,22 +6,8 @@
 #include <WiFi.h>
 #include <HTTPClient.h>
 #include <Notecard.h>
-#include <note/emu/emu.h>
-
-// ── Configuration ──────────────────────────────────────────────────────
-
-#ifndef WIFI_SSID
-#define WIFI_SSID "your-ssid"
-#endif
-#ifndef WIFI_PASS
-#define WIFI_PASS "your-password"
-#endif
-#ifndef NOTEHUB_PAT
-#define NOTEHUB_PAT "your-notehub-api-token"
-#endif
-#ifndef NOTEHUB_PRODUCT
-#define NOTEHUB_PRODUCT "com.example.softcard"
-#endif
+#include <note/emu/note_c.h>
+#include "secrets.h"
 
 // ── Platform HTTP implementation ───────────────────────────────────────
 

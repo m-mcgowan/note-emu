@@ -16,7 +16,7 @@
 #include <string.h>
 #include <time.h>
 
-#include "note/emu/emu.h"
+#include "note/emu/note_c.h"
 #include "note/emu/curl.h"
 
 // Send a JSON request, print it, read response into buf.

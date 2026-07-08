@@ -25,16 +25,15 @@ Uses the **note-cpp** typed API. Sets up the transport via `noteemu::SoftcardSer
 
 ## Setup
 
-1. Edit the `#define` values at the top of the sketch:
+1. Copy `secrets.h.example` to `secrets.h` next to each `.ino` and fill in your values. `secrets.h` is gitignored.
 
-   ```c
+   <!-- snippet:examples/arduino/note_c_example/secrets.h.example:4-7 -->
+   ```cpp
    #define WIFI_SSID "your-ssid"
    #define WIFI_PASS "your-password"
    #define NOTEHUB_PAT "your-notehub-api-token"
-   #define NOTEHUB_PRODUCT "com.your-company:your-product"
+   #define NOTEHUB_PRODUCT "com.example.softcard"
    ```
-
-   Or pass them as build flags (`-DWIFI_SSID=\"...\"`) to keep credentials out of source.
 
 2. Select your ESP32 board in the Arduino IDE.
 

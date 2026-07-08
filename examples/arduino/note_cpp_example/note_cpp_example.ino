@@ -11,27 +11,14 @@
 #include <WiFiClientSecure.h>
 
 #include <note/emu/arduino.hpp>
-#include <note/emu/serial_hal.hpp>
+#include <note/emu/note_cpp.hpp>
 
 #include <note/notecard.hpp>
 #include <note/api.hpp>
 #include <note/protocol.hpp>
 #include <note/link/serial.hpp>
 
-// ── Configuration ──────────────────────────────────────────────────────
-
-#ifndef WIFI_SSID
-#define WIFI_SSID "your-ssid"
-#endif
-#ifndef WIFI_PASS
-#define WIFI_PASS "your-password"
-#endif
-#ifndef NOTEHUB_PAT
-#define NOTEHUB_PAT "your-notehub-api-token"
-#endif
-#ifndef NOTEHUB_PRODUCT
-#define NOTEHUB_PRODUCT "com.example.softcard"
-#endif
+#include "secrets.h"
 
 // ── Globals ────────────────────────────────────────────────────────────
 

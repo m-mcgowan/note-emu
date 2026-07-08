@@ -13,16 +13,21 @@ For new projects, consider using the [platformio-notecard](../platformio-notecar
 
 ## Setup
 
-Edit the `#define` values at the top of `src/main.cpp`:
+Copy the secrets template and fill in your values:
 
-```c
+```sh
+cp src/secrets.h.example src/secrets.h
+```
+
+Edit `src/secrets.h`:
+
+<!-- snippet:examples/platformio/src/secrets.h.example:4-7 -->
+```cpp
 #define WIFI_SSID "your-ssid"
 #define WIFI_PASS "your-password"
 #define NOTEHUB_PAT "your-notehub-api-token"
-#define NOTEHUB_PRODUCT "com.your-company:your-product"
+#define NOTEHUB_PRODUCT "com.example.softcard"
 ```
-
-Or create a `secrets.ini` file (see comments in `platformio.ini` for the format).
 
 ## Build and flash
 

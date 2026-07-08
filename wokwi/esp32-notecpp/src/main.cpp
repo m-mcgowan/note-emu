@@ -17,7 +17,7 @@
 // auto-detection (Arduino #5441 — a bare ".hpp" include is never detected)
 // and pulls in note::emu::Arduino. note-cpp's SerialHal adapter then resolves.
 #include <note-emu.h>
-#include <note/emu/serial_hal.hpp>
+#include <note/emu/note_cpp.hpp>
 
 #include <note/notecard.hpp>
 #include <note/api.hpp>

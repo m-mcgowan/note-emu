@@ -14,7 +14,7 @@
 #include <WiFiClientSecure.h>
 
 #include <note/emu/arduino.hpp>
-#include <note/emu/serial_hal.hpp>
+#include <note/emu/note_cpp.hpp>
 
 #include <note/notecard.hpp>
 #include <note/api.hpp>
