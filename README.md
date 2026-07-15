@@ -1,7 +1,7 @@
 # note-emu
 
 [![CI](https://github.com/m-mcgowan/note-emu/actions/workflows/ci.yml/badge.svg)](https://github.com/m-mcgowan/note-emu/actions/workflows/ci.yml)
-[![Simulate in Wokwi](https://img.shields.io/badge/Simulate-Wokwi-AAB42F?logo=espressif)](https://wokwi.com/projects/465203727626487809)
+[![Simulate in Wokwi (note-c)](https://img.shields.io/badge/Simulate-Wokwi_(note--c)-AAB42F?logo=espressif)](https://wokwi.com/projects/465203727626487809)
 
 A virtual Notecard library for [note-c](https://github.com/blues/note-arduino) and [note-cpp](https://github.com/m-mcgowan/note-cpp).  This provides a drop-in replacement in firmware projects, allowing you to prototype using a virtual Notecard until your physical Notecard is available. 
 
