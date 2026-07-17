@@ -3,6 +3,34 @@
 All notable changes to this project will be documented in this file.
 Follows [Keep a Changelog](https://keepachangelog.com/) conventions.
 
+## [0.3.0] - 2026-07-16
+
+### Added
+- Umbrella headers `<note/emu/note_c.h>` and `<note/emu/note_cpp.hpp>` as the canonical include points for each library integration. The underlying `<note/emu/emu.h>` and `<note/emu/serial_hal.hpp>` remain and still work — the umbrellas make the intent ("I'm using note-c" / "I'm using note-cpp") explicit at the include site.
+- `wokwi/esp32-notecpp/` example (Wokwi project + README + captured `sample-output.txt`) — the note-cpp sibling of `wokwi/esp32-notec/`, now that note-cpp is a published dependency.
+- Scheduled endpoint canary (`.github/workflows/endpoints.yml`) exercising softcard + Notehub daily against a real PAT; retries transient errors once and surfaces clearer diagnostics on failure.
+- Live "Simulate in Wokwi" badge on the top-level `README.md`, pointing at the hosted `esp32-notec` project (note-c variant).
+- Snippet-injection tooling (`tools/inject-snippets.py` + `.githooks/pre-commit` hook + `tools/verify-docs.sh`) that keeps example output blocks in READMEs in sync with captured firmware output.
+- Real captured sample outputs at `wokwi/esp32-notec/sample-output.txt` and `wokwi/esp32-notecpp/sample-output.txt`, wired into their READMEs via snippet markers.
+- Optional `hub.set` in the note-c Wokwi example when `NOTEHUB_PRODUCT` is defined (binds the virtual Notecard to a Notehub project).
+- `docs/softcard-protocol.md` accuracy fixes: `X-User-UID` documented as UUID (was `user:abc123…`) and billing-accounts response shape tightened to match `tests/test_endpoints.py`.
+- `.envrc` added to `.gitignore` (blocks accidental commit of local secrets like `WOKWI_CLI_TOKEN`).
+
+### Changed
+- **Credentials now come from a required `secrets.h`.** Every example that used inline `#ifndef WIFI_SSID … #define …` placeholder fallbacks now requires the user to `cp src/secrets.h.example src/secrets.h` (or the Arduino sketch-dir equivalent). A missing secrets file becomes a compile error instead of a silent binary with placeholder credentials. Applies to `examples/platformio/`, `examples/arduino/note_c_example/`, `examples/arduino/note_cpp_example/`.
+- **note-cpp examples pull note-cpp from git-ref**, not a local checkout. `examples/platformio-notecpp/platformio.ini` and `wokwi/esp32-notecpp/platformio.ini` now use `note-cpp=https://github.com/m-mcgowan/note-cpp.git#v0.3.3` (note-cpp went public 2026-07-08). External users no longer need to set `NOTE_CPP_PATH`; existing local-iteration workflow is documented as an override in the ini comments.
+- `src/note/emu/emu.h` header comment reframed: the core (`note_emu_t`, `note_emu_proto_*`) is note-emu's own design, with note-c and note-cpp compatibility layers riding on top. The old wording described the library as "library-agnostic glue either library can consume," which understated the deliberate note-c hook-signature match.
+- `wokwi/esp32-softcard/` renamed to `wokwi/esp32-notec/` for consistency with the note-c/note-cpp naming split.
+- Top-level `README.md` substantially refreshed: new Overview + "Should I use this in Production?" (why the physical Notecard beats software) + In-browser vs VS Code Wokwi paths + Example output section wired to captured sample. Headers section now lists umbrella headers as canonical.
+- CI (`.github/workflows/ci.yml`) drops the private-repo `Checkout note-cpp` step and its `continue-on-error` shim now that note-cpp is public; `ci.sh` drops the `NOTE_CPP_PATH` guard around note-cpp example builds.
+
+### Removed
+- `examples/platformio-note-cpp-app/` — depended on `note-cpp-app`, which is not published on GitHub. Removed until it lands; can be restored from git history when the dependency ships.
+- Broken `../../PLAN.md` link in `examples/platformio-notecpp/README.md`; retargeted to `docs/softcard-protocol.md`.
+
+### Fixed
+- `wokwi/esp32-notecpp/` brought to parity with `esp32-notec` (same secrets flow, same `platformio.ini` structure, same Wokwi `cpuFrequency: 240` workaround for TLS-handshake speed).
+
 ## [0.2.1] - 2026-05-27
 
 ### Fixed
