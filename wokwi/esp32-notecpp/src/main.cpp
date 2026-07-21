@@ -15,15 +15,10 @@
 
 // <note-emu.h> is the public ".h" umbrella; it triggers Arduino's library
 // auto-detection (Arduino #5441 — a bare ".hpp" include is never detected)
-// and pulls in note::emu::Arduino. note-cpp's SerialHal adapter then resolves.
+// and pulls in note::emu::Arduino. <note/emu/note_cpp.hpp> pulls in the
+// note-cpp typed API + streaming transport stack in one shot.
 #include <note-emu.h>
 #include <note/emu/note_cpp.hpp>
-
-#include <note/notecard.hpp>
-#include <note/api.hpp>
-#include <note/protocol.hpp>
-#include <note/link/serial.hpp>
-#include <note/debug.hpp>
 
 #include "secrets.h"
 
