@@ -13,12 +13,12 @@
 #include <WiFi.h>
 #include <WiFiClientSecure.h>
 
-// <note-emu.h> is the public ".h" umbrella; it triggers Arduino's library
-// auto-detection (Arduino #5441 — a bare ".hpp" include is never detected)
-// and pulls in note::emu::Arduino. <note/emu/note_cpp.hpp> pulls in the
-// note-cpp typed API + streaming transport stack in one shot.
+// Direct include of <note-cpp.h> is what triggers Arduino's library
+// auto-detection to add note-cpp to the include path (Arduino #5441 —
+// a bare ".hpp" include isn't detected). Once note-cpp is visible,
+// <note-emu.h> auto-pulls the note-emu ↔ note-cpp bridge.
+#include <note-cpp.h>
 #include <note-emu.h>
-#include <note/emu/note_cpp.hpp>
 
 #include "secrets.h"
 

@@ -17,3 +17,19 @@
 
 #include "note/emu/emu.h"
 #include "note/emu/arduino.hpp"
+
+// If note-cpp is on the include path (i.e. the sketch has #include <note-cpp.h>
+// or the library is otherwise resolvable), pull in the note-cpp integration
+// bridge automatically. This mirrors how note-arduino's <Notecard.h> is
+// discovered via direct sketch include and then consumed here.
+//
+// This is header-only and additive: sketches that don't touch note-cpp
+// are unaffected. Sketches that want the note-cpp typed API can write:
+//
+//     #include <note-cpp.h>
+//     #include <note-emu.h>
+//
+// and get the full note::Notecard + note-emu SerialHal stack in scope.
+#if __has_include(<note.hpp>)
+#include "note/emu/note_cpp.hpp"
+#endif
