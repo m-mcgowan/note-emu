@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 Follows [Keep a Changelog](https://keepachangelog.com/) conventions.
 
+## [0.3.1] - 2026-07-22
+
+### Changed
+- `<note/emu/note_cpp.hpp>` now bundles the full note-cpp typed-API + streaming transport stack (`note.hpp`, `note/link/serial.hpp`, `note/protocol.hpp`, `note/debug.hpp`). Previously it only pulled in the note-emu ↔ note-cpp bridge, forcing sketches to include the transport headers explicitly. Additive change — existing sketches that included those headers directly still compile.
+- `<note-emu.h>` now uses `__has_include(<note.hpp>)` to conditionally pull in the note-cpp bridge (via `<note/emu/note_cpp.hpp>`). Brings note-cpp sketches to include-parity with note-c sketches: `#include <note-cpp.h>` triggers note-cpp auto-detection, then `#include <note-emu.h>` picks up the bridge automatically. See `wokwi/esp32-notecpp/src/main.cpp` for the new shorter form. Sketches that don't use note-cpp are unaffected.
+
 ## [0.3.0] - 2026-07-16
 
 ### Added
