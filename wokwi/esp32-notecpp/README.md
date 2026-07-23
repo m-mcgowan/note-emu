@@ -1,5 +1,7 @@
 # esp32-notecpp — note-emu on Wokwi (note-cpp)
 
+[![Simulate in Wokwi](https://img.shields.io/badge/Simulate-Wokwi-AAB42F?logo=espressif)](https://wokwi.com/projects/469739119860047873)
+
 A simulated ESP32-S3 that talks to the **real** Blues softcard service over Wokwi's
 virtual WiFi — no physical Notecard, no hardware at all. This is the **note-cpp** sibling
 of [`esp32-notec/`](../esp32-notec/), using the type-safe C++23 note-cpp API on top of
