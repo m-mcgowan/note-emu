@@ -217,6 +217,8 @@ graph TD
 
 ## See also
 
+- [docs/migrating-to-physical-notecard.md](docs/migrating-to-physical-notecard.md) — step-by-step migration guide with `note-c` and `note-cpp` before/after code
+- [docs/softcard-protocol.md](docs/softcard-protocol.md) — the HTTP wire protocol note-emu speaks to softcard
 - [examples/](examples/) — all examples with per-directory READMEs
 - [tests/](tests/) — integration tests (native and firmware)
 - [tests/unit/](tests/unit/) — Catch2 unit tests (34 tests covering happy + error paths)
