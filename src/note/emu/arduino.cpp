@@ -6,6 +6,15 @@
 
 #include <Arduino.h>
 
+// installNoteC() requires note-arduino (which brings in note-c). Guard
+// with __has_include so sketches using note-emu with note-cpp only —
+// without note-arduino installed — still build. Calling installNoteC()
+// without note-arduino present will produce a linker error.
+#if __has_include(<Notecard.h>)
+#include <Notecard.h>
+#define NOTE_EMU_HAVE_NOTE_C 1
+#endif
+
 namespace note::emu {
 
 Arduino::Arduino(const char *api_token)
@@ -26,6 +35,22 @@ note_emu_err_t Arduino::begin(NetworkClient &client) {
     _client = &client;
     return note_emu_create(&_config, &_emu);
 }
+
+#ifdef NOTE_EMU_HAVE_NOTE_C
+static uint32_t noteemu_millis_free() { return ::millis(); }
+static void     noteemu_delay_free(uint32_t ms) { ::delay(ms); }
+
+void Arduino::installNoteC() {
+    NoteSetFnDefault(malloc, free, noteemu_delay_free, noteemu_millis_free);
+    note_emu_set_global(_emu);
+    NoteSetFnSerial(
+        note_emu_serial_reset,
+        note_emu_serial_transmit,
+        note_emu_serial_available,
+        note_emu_serial_receive
+    );
+}
+#endif
 
 void Arduino::setDebugOutput(Print &output) {
     _log_output = &output;

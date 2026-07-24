@@ -5,8 +5,8 @@
 // with both note-c and note-cpp.
 //
 // Usage (note-c):
-//   #include <note/emu/arduino.hpp>
 //   #include <Notecard.h>
+//   #include <note-emu.h>
 //
 //   note::emu::Arduino softcard(NOTEHUB_PAT);
 //   softcard.begin(wifiClient);
@@ -14,13 +14,19 @@
 //   // use note-c normally: NoteRequestResponse(NoteNewRequest("card.version"))
 //
 // Usage (note-cpp):
-//   #include <note/emu/arduino.hpp>
-//   #include <note/arduino.hpp>
+//   #include <note-cpp.h>
+//   #include <note-emu.h>
 //
 //   note::emu::Arduino softcard(NOTEHUB_PAT);
 //   softcard.begin(wifiClient);
-//   note::arduino::Notecard nc;
-//   nc.begin(softcard.serialHal());
+//   auto &nc = note::emu::installNoteCpp(softcard);
+//   note::Api api(nc);
+//   api.card.version().execute();
+//
+// Both install*() calls may be invoked on the same softcard so note-c
+// and note-cpp APIs coexist (they share the same underlying note_emu_t
+// transport, exactly as they would against a physical Notecard on the
+// same wire — do not overlap requests).
 
 #pragma once
 
@@ -46,6 +52,13 @@ public:
     // note_emu_set_global() for note-c integration, or to create
     // a note::emu::SerialHal for note-cpp integration.
     note_emu_t *instance() { return _emu; }
+
+    // Install as note-c serial transport. Call after begin().
+    // Sets this instance as the note-c global and installs the four
+    // serial hook callbacks. Idempotent — safe to call more than once.
+    // After this, use note-c's global API:
+    //   NoteRequestResponse(NoteNewRequest("card.version"))
+    void installNoteC();
 
     // Set the output stream for log messages. Default: Serial.
     void setDebugOutput(Print &output);
