@@ -213,6 +213,29 @@ line.
 
 Once these are wired, the API surface is identical to a physical Notecard.
 
+## Running `note-c` and `note-cpp` in the same sketch
+
+If your project uses both APIs — for example, you're migrating incrementally
+from `note-c` to `note-cpp` and want existing raw-JSON call sites to keep
+working alongside new typed-API code — `note-emu` supports the same
+[bridge-mode pattern](https://github.com/m-mcgowan/note-cpp/blob/main/docs/platforms/host/migration-from-note-c.md#bridge-mode-incremental-migration)
+that `note-cpp` documents against physical hardware. In bridge mode,
+`note-c` owns the transport and `note-cpp` typed calls marshal through
+`NoteRequestResponseJSON()`.
+
+Against `note-emu`, wire it via `installNoteC()` + `installNoteCppBridge()`
+(defined in `<note/emu/note_cpp_bridge.hpp>`). See
+[`examples/platformio-bridge/`](../examples/platformio-bridge/) for a
+runnable sketch.
+
+**Same pattern on physical hardware**: swap the `note-emu` softcard setup
+for `Notecard::begin(Wire)` (or `Serial1`), keep the bridge wiring on top.
+Application code above the transport does not change — either the raw
+`NoteRequestResponse` calls or the typed `note::Api` calls carry over
+unchanged. See `note-cpp`'s
+[migration-from-note-c guide](https://github.com/m-mcgowan/note-cpp/blob/main/docs/platforms/host/migration-from-note-c.md)
+for the physical-Notecard variant of the same wiring.
+
 ## Handling both configurations in one build
 
 If you want a single codebase that builds for both `note-emu` and a physical

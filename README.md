@@ -180,6 +180,69 @@ make -C examples/native
 
 The `platformio-notecpp` and `wokwi/esp32-notecpp` projects pull note-cpp from GitHub via their `platformio.ini` `lib_deps` — no additional setup needed. To iterate against a local note-cpp checkout, replace the `note-cpp=https://...` line in the project's `platformio.ini` with `note-cpp=symlink:///abs/path/to/note-cpp`.
 
+## Running note-c and note-cpp side by side
+
+If you want both APIs available in the same sketch — either to migrate a project incrementally from note-c to note-cpp, or to keep legacy raw-JSON call sites alongside new typed-API code — use note-cpp's [bridge mode](https://github.com/m-mcgowan/note-cpp/blob/main/docs/platforms/host/migration-from-note-c.md#bridge-mode-incremental-migration). note-emu ships a ready-to-use bridge helper in `<note/emu/note_cpp_bridge.hpp>`.
+
+The full working example is at [`examples/platformio-bridge/`](examples/platformio-bridge/) (built as part of CI). The relevant lines:
+
+**Includes:**
+
+<!-- snippet:coexistence-includes examples/platformio-bridge/src/main.cpp:18-26 -->
+```cpp
+// Disable note-cpp's blanket `using namespace note;` — otherwise
+// note-arduino's global `Notecard` collides with note-cpp's
+// `Notecard` alias for `note::arduino::Notecard`. See note-cpp's
+// examples/arduino/note-arduino-bridge/src/main.cpp for context.
+#define NOTE_USING_NAMESPACE 0
+#include <Notecard.h>                    // note-arduino (brings in note-c + cJSON)
+#include <note-cpp.h>                    // note-cpp typed API
+#include <note-emu.h>                    // note-emu (auto-pulls note_cpp.hpp bridge base)
+#include <note/emu/note_cpp_bridge.hpp>  // note-cpp bridge on top of note-c
+```
+
+**Install both:**
+
+<!-- snippet:coexistence-install examples/platformio-bridge/src/main.cpp:59-66 -->
+```cpp
+// 1. note-c owns the transport (installs global serial hooks
+//    pointing at note-emu's virtual Notecard).
+softcard.installNoteC();
+
+// 2. note-cpp bridges on top of note-c. Returns a Notecard
+//    whose typed calls route through NoteRequestResponseJSON().
+auto &nc = note::emu::installNoteCppBridge(softcard);
+note::Api api(nc);
+```
+
+**Use either API — both talk to the same virtual Notecard:**
+
+<!-- snippet:coexistence-usage examples/platformio-bridge/src/main.cpp:72-89 -->
+```cpp
+// note-c: raw JSON API
+J *req = NoteNewRequest("hub.set");
+JAddStringToObject(req, "product", "com.example.you:bridge-demo");
+JAddStringToObject(req, "mode", "continuous");
+J *rsp = NoteRequestResponse(req);
+Serial.printf("hub.set (note-c): %s\n",
+              (rsp && !JGetString(rsp, "err")[0]) ? "OK" : "FAIL");
+NoteDeleteResponse(rsp);
+
+// note-cpp: typed API
+auto v = api.card.version().execute();
+if (v) {
+    Serial.print("card.version (note-cpp): ");
+    Serial.println(v.version);
+} else {
+    Serial.print("card.version FAILED: ");
+    Serial.println(v.error());
+}
+```
+
+### Switching to physical hardware
+
+Once you're comfortable with the bridge pattern against note-emu, the same code carries over to a physical Notecard: swap the note-emu softcard setup for note-arduino's `Notecard::begin()` and everything above the transport stays put. See [`docs/migrating-to-physical-notecard.md`](docs/migrating-to-physical-notecard.md) for the full transport-swap walkthrough, and note-cpp's [migration-from-note-c guide](https://github.com/m-mcgowan/note-cpp/blob/main/docs/platforms/host/migration-from-note-c.md) for the underlying bridge design (the same `NoteCTransport` we wrap in `installNoteCppBridge`).
+
 
 ## Architecture
 
