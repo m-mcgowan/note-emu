@@ -1,6 +1,6 @@
 {
   "name": "note-emu",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "Virtual Notecard transport over HTTP (softcard emulation)",
   "keywords": "notecard, blues, emulator, softcard",
   "repository": {

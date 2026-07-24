@@ -3,6 +3,15 @@
 All notable changes to this project will be documented in this file.
 Follows [Keep a Changelog](https://keepachangelog.com/) conventions.
 
+## [0.3.2] - 2026-07-24
+
+### Added
+- `Arduino::installNoteC()` method wires note-c's global serial hooks (`NoteSetFnSerial`, `NoteSetFnDefault`) to note-emu in a single call. Replaces ~6 lines of boilerplate. Guarded by `__has_include(<Notecard.h>)` so pure-note-cpp builds without note-arduino remain valid.
+- `note::emu::TransportStack` + `note::emu::installNoteCpp()` in `<note/emu/note_cpp.hpp>` — one-call setup for the note-cpp streaming pipeline. Replaces the SerialHal + SerialFramer + Protocol + Notecard chain.
+- New `<note/emu/note_cpp_bridge.hpp>` — provides `note::emu::NoteCBridge` and `installNoteCppBridge()` wrapping note-cpp's [documented bridge-mode pattern](https://github.com/m-mcgowan/note-cpp/blob/main/docs/platforms/host/migration-from-note-c.md#bridge-mode-incremental-migration). Enables note-c and note-cpp APIs to coexist against the same virtual Notecard.
+- New `examples/platformio-bridge/` — runnable coexistence sketch, built as part of CI. Top-level README snippets its code via `tools/inject-snippets.py` so docs stay in sync.
+- `docs/migrating-to-physical-notecard.md` — new "Running note-c and note-cpp in the same sketch" section covers the coexistence pattern for both virtual and physical Notecards.
+
 ## [0.3.1] - 2026-07-22
 
 ### Changed
