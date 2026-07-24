@@ -66,19 +66,33 @@ void setup() {
     note::Api api(nc);
     // readme:end
 
+    // Wire up JSON tracing for note-cpp via DebugListener::on_wire.
+    // note-c side traces are printed manually below via JPrintUnformatted.
+    static note::DebugListener listener;
+    listener.on_wire = [](const note::WireEvent &e, void *) {
+        Serial.print(e.direction == note::WireDirection::Send ? "  > " : "  < ");
+        Serial.write(reinterpret_cast<const uint8_t *>(e.json.data()), e.json.size());
+        Serial.println();
+    };
+    nc.set_debug(listener);
+
     // ── Both APIs now work against the same virtual Notecard ────────
 
     // readme:coexistence-usage
-    // note-c: raw JSON API
+    // note-c: raw JSON API. Trace the request/response with JPrintUnformatted.
     J *req = NoteNewRequest("hub.set");
     JAddStringToObject(req, "product", "com.example.you:bridge-demo");
     JAddStringToObject(req, "mode", "continuous");
+    if (char *s = JPrintUnformatted(req)) { Serial.printf("  > %s\n", s); JFree(s); }
     J *rsp = NoteRequestResponse(req);
+    if (char *s = JPrintUnformatted(rsp)) { Serial.printf("  < %s\n", s); JFree(s); }
     Serial.printf("hub.set (note-c): %s\n",
                   (rsp && !JGetString(rsp, "err")[0]) ? "OK" : "FAIL");
     NoteDeleteResponse(rsp);
 
-    // note-cpp: typed API
+    // note-cpp: typed API. JSON traces come out via DebugListener::on_wire
+    // (installed above) — the `>` and `<` lines above each result show the
+    // wire-format request and response.
     auto v = api.card.version().execute();
     if (v) {
         Serial.print("card.version (note-cpp): ");

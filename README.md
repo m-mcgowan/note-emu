@@ -217,18 +217,22 @@ note::Api api(nc);
 
 **Use either API — both talk to the same virtual Notecard:**
 
-<!-- snippet:coexistence-usage examples/platformio-bridge/src/main.cpp:72-89 -->
+<!-- snippet:coexistence-usage examples/platformio-bridge/src/main.cpp:82-103 -->
 ```cpp
-// note-c: raw JSON API
+// note-c: raw JSON API. Trace the request/response with JPrintUnformatted.
 J *req = NoteNewRequest("hub.set");
 JAddStringToObject(req, "product", "com.example.you:bridge-demo");
 JAddStringToObject(req, "mode", "continuous");
+if (char *s = JPrintUnformatted(req)) { Serial.printf("  > %s\n", s); JFree(s); }
 J *rsp = NoteRequestResponse(req);
+if (char *s = JPrintUnformatted(rsp)) { Serial.printf("  < %s\n", s); JFree(s); }
 Serial.printf("hub.set (note-c): %s\n",
               (rsp && !JGetString(rsp, "err")[0]) ? "OK" : "FAIL");
 NoteDeleteResponse(rsp);
 
-// note-cpp: typed API
+// note-cpp: typed API. JSON traces come out via DebugListener::on_wire
+// (installed above) — the `>` and `<` lines above each result show the
+// wire-format request and response.
 auto v = api.card.version().execute();
 if (v) {
     Serial.print("card.version (note-cpp): ");
