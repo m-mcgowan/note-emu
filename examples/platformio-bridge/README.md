@@ -42,12 +42,36 @@ pio device monitor
 
 ## What to look for in the output
 
-Both API calls succeed in the same sketch, hitting the same virtual Notecard:
+Both API calls succeed in the same sketch, hitting the same virtual Notecard. Captured from a real Wokwi run (account UID redacted):
 
-```
+<!-- snippet:examples/platformio-bridge/sample-output.txt:1-15 -->
+```text
+note-emu bridge example (note-c + note-cpp)
+....
+Connected: 10.13.37.2
+note-emu: connecting to https://softcard.blues.com
+note-emu: resolving account UID from PAT via billing-accounts API
+note-emu: billing-accounts -> rc=0 http=200 [402 ms]
+note-emu: resolved account UID: 00000000-0000-0000-0000-000000000000
+note-emu: ready (uid=00000000-0000-0000-0000-000000000000)
+note-emu: POST /v1/write (101 bytes) -> rc=0 http=200 [504 ms]
+note-emu: POST /v1/read -> rc=0 http=200 bytes=26 [42 ms]
 hub.set (note-c): OK
+note-emu: POST /v1/write (31 bytes) -> rc=0 http=200 [102 ms]
+note-emu: POST /v1/read -> rc=0 http=200 bytes=369 [42 ms]
 card.version (note-cpp): notecard-11.1.1.1301
 READY
+```
+
+## Running in Wokwi
+
+The example ships with a `wokwi.toml` + `diagram.json`, so it also builds and runs under the Wokwi simulator (browser or VS Code extension):
+
+```sh
+pio run -e wokwi
+# then either:
+#   - open this folder in VS Code with the Wokwi extension
+#   - or, headless: WOKWI_CLI_TOKEN=... wokwi-cli --expect-text "READY" .
 ```
 
 ## Switching to physical hardware

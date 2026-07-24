@@ -1,0 +1,15 @@
+note-emu bridge example (note-c + note-cpp)
+....
+Connected: 10.13.37.2
+note-emu: connecting to https://softcard.blues.com
+note-emu: resolving account UID from PAT via billing-accounts API
+note-emu: billing-accounts -> rc=0 http=200 [402 ms]
+note-emu: resolved account UID: 00000000-0000-0000-0000-000000000000
+note-emu: ready (uid=00000000-0000-0000-0000-000000000000)
+note-emu: POST /v1/write (101 bytes) -> rc=0 http=200 [504 ms]
+note-emu: POST /v1/read -> rc=0 http=200 bytes=26 [42 ms]
+hub.set (note-c): OK
+note-emu: POST /v1/write (31 bytes) -> rc=0 http=200 [102 ms]
+note-emu: POST /v1/read -> rc=0 http=200 bytes=369 [42 ms]
+card.version (note-cpp): notecard-11.1.1.1301
+READY
