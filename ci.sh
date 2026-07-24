@@ -70,6 +70,7 @@ done
 for example in \
     wokwi/esp32-notecpp \
     examples/platformio-notecpp \
+    examples/platformio-bridge \
 ; do
     run "pio $example" bash -c "set -o pipefail; cd $example && pio run 2>&1 | tail -15"
 done

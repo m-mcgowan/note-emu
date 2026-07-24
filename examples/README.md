@@ -12,6 +12,10 @@ The standard Blues Arduino API with a virtual Notecard. Uses `note::emu::Arduino
 
 Type-safe note-cpp API with the streaming transport. Uses `note::emu::SerialHal` to bridge to `note::link::SerialFramer`. Demonstrates `note::Api` with typed requests and responses.
 
+### [platformio-bridge](platformio-bridge/) — note-c + note-cpp coexistence
+
+Runs both APIs in one sketch against the same virtual Notecard, via note-cpp's [bridge mode](https://github.com/m-mcgowan/note-cpp/blob/main/docs/platforms/host/migration-from-note-c.md#bridge-mode-incremental-migration). Useful for incremental migration between the two libraries, or when legacy note-c code coexists with new typed-API code.
+
 ### [platformio](platformio/) — note-c raw API
 
 PlatformIO version of the Arduino note-c sketch. Uses the note-emu C API directly with a hand-written HTTP callback.
