@@ -1,0 +1,13 @@
+{
+  "name": "sync-wokwi",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Sync local wokwi/esp32-* sources into their hosted Wokwi projects via Playwright.",
+  "type": "module",
+  "scripts": {
+    "sync": "node sync.js"
+  },
+  "dependencies": {
+    "playwright": "^1.48.0"
+  }
+}
