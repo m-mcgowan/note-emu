@@ -28,10 +28,10 @@ Copy the secrets template and fill in your values:
 cp src/secrets.h.example src/secrets.h
 ```
 
-<!-- snippet:wokwi/esp32-bridge/src/secrets.h.example:4-6 -->
+<!-- snippet:wokwi/esp32-bridge/src/secrets.h.example:8-10 -->
 ```cpp
-#define WIFI_SSID "your-ssid"
-#define WIFI_PASS "your-password"
+#define WIFI_SSID "Wokwi-GUEST"
+#define WIFI_PASS ""
 #define NOTEHUB_PAT "your-notehub-api-token"
 ```
 
