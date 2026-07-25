@@ -28,11 +28,23 @@ Copy the secrets template and fill in your values:
 cp src/secrets.h.example src/secrets.h
 ```
 
-<!-- snippet:wokwi/esp32-bridge/src/secrets.h.example:8-10 -->
+<!-- snippet:wokwi/esp32-bridge/src/secrets.h.example:4-19 -->
 ```cpp
+// WiFi — Wokwi defaults. Override for real hardware.
 #define WIFI_SSID "Wokwi-GUEST"
 #define WIFI_PASS ""
+
+// Notehub Personal Access Token (required).
+// Create one at https://notehub.io — Settings → Personal Access Tokens.
 #define NOTEHUB_PAT "your-notehub-api-token"
+
+// Notehub ProductUID (optional).
+// Reverse-DNS format, e.g. "com.your-co.you:my-project". Binds this
+// virtual Notecard to a specific project so events land there and the
+// device appears under the project's Devices tab. Without it, the
+// device runs fine but is unattached — you can still bind it later via
+// {"req":"hub.set","product":"..."}.
+// #define NOTEHUB_PRODUCT "com.your-co.you:my-project"
 ```
 
 ## Build and flash

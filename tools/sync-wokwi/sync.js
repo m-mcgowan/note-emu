@@ -80,23 +80,52 @@ function adaptForWokwi(content, kind) {
 
 // ────────────────────────────────────────────────────────────────────────────
 // Auth: first-run login flow.
+//
+// Google's OAuth flow detects Playwright's Chromium via `navigator.webdriver`
+// and refuses login ("this browser or app may not be secure"). We work
+// around that with:
+//   - `channel: 'chrome'` — use the real Chrome install rather than
+//     Playwright's Chromium
+//   - `--disable-blink-features=AutomationControlled` — masks the automation
+//     flag
+//   - a persistent user-data-dir — behaves like a normal browser session
 // ────────────────────────────────────────────────────────────────────────────
-async function firstRunLogin() {
-    console.log('First-time setup: opening browser to wokwi.com — please log in.');
-    console.log('After you\'re logged in and can see your project list, come back to this terminal.');
+const USER_DATA_DIR = path.join(__dirname, '.chrome-profile');
 
-    const browser = await chromium.launch({ headless: false });
-    const context = await browser.newContext();
-    const page = await context.newPage();
+async function launchAuthedContext({ headless }) {
+    // Persistent context is what tricks Google into treating this as a
+    // normal browser. Storage state file is used only for the SECOND flow
+    // (fresh browsers per run) — with the persistent profile, cookies live
+    // in the user-data-dir directly.
+    return chromium.launchPersistentContext(USER_DATA_DIR, {
+        channel: 'chrome',
+        headless,
+        args: [
+            '--disable-blink-features=AutomationControlled',
+            '--disable-features=IsolateOrigins,site-per-process',
+        ],
+        ignoreDefaultArgs: ['--enable-automation'],
+    });
+}
+
+async function firstRunLogin() {
+    console.log('First-time setup: opening Chrome to wokwi.com — please log in.');
+    console.log('After you\'re logged in and can see your project list, come back to this terminal.\n');
+    console.log('Using a persistent Chrome profile at:', path.relative(REPO_ROOT, USER_DATA_DIR));
+
+    const context = await launchAuthedContext({ headless: false });
+    const page = context.pages()[0] || await context.newPage();
     await page.goto('https://wokwi.com/login');
 
     const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
-    await rl.question('\nPress Enter here after you have logged in… ');
+    await rl.question('\nPress Enter here after you have logged in and Wokwi loads your project list… ');
     rl.close();
 
+    // Also save storageState for potential future use, but the persistent
+    // profile is what will actually be re-used on subsequent runs.
     await context.storageState({ path: AUTH_STATE_FILE });
-    await browser.close();
-    console.log(`Saved auth state to ${path.relative(REPO_ROOT, AUTH_STATE_FILE)}`);
+    await context.close();
+    console.log(`Login complete. Profile persisted at ${path.relative(REPO_ROOT, USER_DATA_DIR)}`);
 }
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -197,6 +226,84 @@ async function saveProject(page) {
 }
 
 // ────────────────────────────────────────────────────────────────────────────
+// Project-lock handling.
+//
+// Wokwi projects can be "locked" from a dropdown menu (the "Lock project"
+// menu item is a checkbox — checked = locked). Locked projects silently
+// drop Cmd+S saves. We need to unlock before editing and re-lock after.
+//
+// The menu is opened from a dropdown button near the "Save" button — we
+// try a handful of selectors and fall through if nothing works.
+// ────────────────────────────────────────────────────────────────────────────
+
+async function openLockMenu(page) {
+    const triggers = [
+        // Common Material UI patterns for a split/menu-adjacent button
+        'button[aria-label*="save options" i]',
+        'button[aria-label*="more" i]',
+        'button[aria-haspopup="true"]',
+        'button:has(svg[data-testid="ArrowDropDownIcon"])',
+        'button:has(svg[data-testid="MoreVertIcon"])',
+        // Save button variants
+        'button:has-text("Save")',
+    ];
+    for (const sel of triggers) {
+        const buttons = page.locator(sel);
+        const count = await buttons.count().catch(() => 0);
+        for (let i = 0; i < count; i++) {
+            const btn = buttons.nth(i);
+            if (!(await btn.isVisible({ timeout: 300 }).catch(() => false))) continue;
+            await btn.click().catch(() => {});
+            const item = page.locator('[role="menuitem"]:has-text("Lock project")').first();
+            if (await item.isVisible({ timeout: 800 }).catch(() => false)) {
+                return item;
+            }
+            // Close any wrong menu we opened
+            await page.keyboard.press('Escape').catch(() => {});
+        }
+    }
+    return null;
+}
+
+// Ensure the project is unlocked. Returns true if we changed the state
+// (so the caller knows to re-lock afterwards).
+async function unlockProjectIfNeeded(page) {
+    const item = await openLockMenu(page);
+    if (!item) {
+        console.log('  [warn] could not find "Lock project" menu — proceeding without unlock');
+        return false;
+    }
+    const checkbox = item.locator('input[name="lock"]');
+    const isLocked = await checkbox.isChecked().catch(() => false);
+    if (isLocked) {
+        console.log('  unlocking project…');
+        await item.click();
+        await page.waitForTimeout(500);
+    }
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(300);
+    return isLocked;
+}
+
+// Re-lock the project.
+async function relockProject(page) {
+    const item = await openLockMenu(page);
+    if (!item) {
+        console.log('  [warn] could not find "Lock project" menu to re-lock');
+        return;
+    }
+    const checkbox = item.locator('input[name="lock"]');
+    const isLocked = await checkbox.isChecked().catch(() => false);
+    if (!isLocked) {
+        console.log('  re-locking project…');
+        await item.click();
+        await page.waitForTimeout(500);
+    }
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(300);
+}
+
+// ────────────────────────────────────────────────────────────────────────────
 // Main sync loop.
 // ────────────────────────────────────────────────────────────────────────────
 async function syncProject(context, project, opts) {
@@ -212,6 +319,9 @@ async function syncProject(context, project, opts) {
 
     const wokwiFiles = await listWokwiFiles(page);
     console.log(`  files on wokwi: ${wokwiFiles.join(', ') || '(none detected — UI may have changed)'}`);
+
+    // Unlock the project before we try any writes.
+    const weUnlocked = opts.dryRun ? false : await unlockProjectIfNeeded(page);
 
     let changed = 0, unchanged = 0, skipped = 0, verifyFailed = 0;
 
@@ -269,18 +379,43 @@ async function syncProject(context, project, opts) {
 
         await setEditorContent(page, localContent);
         await saveProject(page);
+        console.log(`  saved: ${file.wokwi} (verifying against server after reload)`);
+        changed++;
+    }
 
-        // Verify: re-read the editor and compare.
-        // Also click the same tab in case save switched view.
-        await clickWokwiTab(page, file.wokwi);
-        const verify = await getEditorContent(page);
-        if (verify !== localContent) {
-            console.error(`  VERIFY FAILED: ${file.wokwi} — saved content differs from local`);
-            verifyFailed++;
-        } else {
-            console.log(`  saved + verified: ${file.wokwi}`);
-            changed++;
+    // Post-sync verify: reload the project page to bypass Monaco's in-memory
+    // buffer, then re-read each just-updated file's content from what
+    // Wokwi's server actually returns. Catches saves that were silently
+    // dropped (e.g. by Wokwi's project-lock mechanism).
+    if (changed > 0 && !opts.dryRun) {
+        console.log(`  reloading to verify server-side content…`);
+        await page.reload();
+        await page.waitForSelector('.monaco-editor', { timeout: 30_000 });
+        await page.waitForTimeout(2_000);
+
+        for (const file of project.files) {
+            const localPath = path.join(REPO_ROOT, file.local);
+            if (!fs.existsSync(localPath)) continue;
+            let localContent = fs.readFileSync(localPath, 'utf-8');
+            if (file.adapt) localContent = adaptForWokwi(localContent, file.adapt);
+            if (file.wokwi === 'secrets.h' && containsRealPat(localContent)) continue;
+
+            await clickWokwiTab(page, file.wokwi);
+            const serverContent = await getEditorContent(page);
+            if (serverContent === localContent) {
+                console.log(`    ✓ persisted: ${file.wokwi}`);
+            } else {
+                const serverLines = serverContent?.split('\n').length ?? '?';
+                console.error(`    ✗ NOT PERSISTED: ${file.wokwi} (server: ${serverLines} lines, expected: ${localContent.split('\n').length} lines)`);
+                verifyFailed++;
+                changed--;
+            }
         }
+    }
+
+    // Re-lock the project if we unlocked it.
+    if (weUnlocked) {
+        await relockProject(page);
     }
 
     await page.close();
@@ -299,14 +434,19 @@ async function main() {
         return;
     }
 
-    if (!fs.existsSync(AUTH_STATE_FILE)) {
-        console.error(`No auth state at ${path.relative(REPO_ROOT, AUTH_STATE_FILE)}.`);
-        console.error(`Run:  node sync.js --login`);
+    // Prefer the persistent-profile flow (from --login on macOS with the
+    // Chrome anti-detection args); fall back to storageState JSON if that's
+    // all we have.
+    let context;
+    if (fs.existsSync(USER_DATA_DIR)) {
+        context = await launchAuthedContext({ headless: !debug });
+    } else if (fs.existsSync(AUTH_STATE_FILE)) {
+        const browser = await chromium.launch({ headless: !debug });
+        context = await browser.newContext({ storageState: AUTH_STATE_FILE });
+    } else {
+        console.error(`No auth found.\nRun:  node sync.js --login`);
         process.exit(1);
     }
-
-    const browser = await chromium.launch({ headless: !debug });
-    const context = await browser.newContext({ storageState: AUTH_STATE_FILE });
 
     const totals = { changed: 0, unchanged: 0, skipped: 0, verifyFailed: 0 };
     for (const project of PROJECTS) {
@@ -318,7 +458,7 @@ async function main() {
         totals.verifyFailed += s.verifyFailed;
     }
 
-    await browser.close();
+    await context.close();
 
     console.log(`\n━━━ done ━━━`);
     console.log(`  ${dryRun ? 'would change' : 'changed'}: ${totals.changed}`);
