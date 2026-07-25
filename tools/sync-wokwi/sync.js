@@ -285,6 +285,33 @@ async function unlockProjectIfNeeded(page) {
     return isLocked;
 }
 
+// Print a small unified-ish diff between two text blocks.
+// Not a full LCS diff — just marks added/removed/context runs. Good
+// enough for eyeballing what would change during --dry-run.
+function printDiff(oldText, newText, label) {
+    const a = (oldText || '').split('\n');
+    const b = (newText || '').split('\n');
+    console.log(`  --- ${label} (wokwi)`);
+    console.log(`  +++ ${label} (local)`);
+    // Trivial diff: line-by-line, mark differing regions.
+    let i = 0, j = 0;
+    while (i < a.length || j < b.length) {
+        if (i < a.length && j < b.length && a[i] === b[j]) {
+            // Context — show up to 1 line, then elide.
+            console.log(`    ${a[i]}`);
+            i++; j++;
+        } else {
+            // Find the next matching pair to bound the diff hunk.
+            let ni = i, nj = j;
+            while (ni < a.length && !b.slice(nj, nj + 20).includes(a[ni])) ni++;
+            while (nj < b.length && !a.slice(i, i + 20).includes(b[nj])) nj++;
+            for (let k = i; k < ni; k++) console.log(`  - ${a[k]}`);
+            for (let k = j; k < nj; k++) console.log(`  + ${b[k]}`);
+            i = ni; j = nj;
+        }
+    }
+}
+
 // Re-lock the project.
 async function relockProject(page) {
     const item = await openLockMenu(page);
@@ -372,6 +399,10 @@ async function syncProject(context, project, opts) {
         const wokwiLines = wokwiContent.split('\n').length;
         console.log(`  ${opts.dryRun ? 'WOULD UPDATE' : 'updating'}: ${file.wokwi}  (local: ${localLines} lines, wokwi: ${wokwiLines} lines)`);
 
+        if (opts.showDiff) {
+            printDiff(wokwiContent, localContent, file.wokwi);
+        }
+
         if (opts.dryRun) {
             changed++;
             continue;
@@ -427,6 +458,7 @@ async function main() {
     const dryRun = argv.includes('--dry-run');
     const debug = argv.includes('--debug');
     const login = argv.includes('--login');
+    const showDiff = argv.includes('--show-diff');
     const projectFilter = argv.find(a => !a.startsWith('--'));
 
     if (login) {
@@ -451,7 +483,7 @@ async function main() {
     const totals = { changed: 0, unchanged: 0, skipped: 0, verifyFailed: 0 };
     for (const project of PROJECTS) {
         if (projectFilter && !project.name.includes(projectFilter)) continue;
-        const s = await syncProject(context, project, { dryRun, debug });
+        const s = await syncProject(context, project, { dryRun, debug, showDiff });
         totals.changed += s.changed;
         totals.unchanged += s.unchanged;
         totals.skipped += s.skipped;
