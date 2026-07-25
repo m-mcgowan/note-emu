@@ -3,6 +3,7 @@
 [![CI](https://github.com/m-mcgowan/note-emu/actions/workflows/ci.yml/badge.svg)](https://github.com/m-mcgowan/note-emu/actions/workflows/ci.yml)
 [![Simulate in Wokwi (note-c)](https://img.shields.io/badge/Simulate-Wokwi_(note--c)-AAB42F?logo=espressif)](https://wokwi.com/projects/465203727626487809)
 [![Simulate in Wokwi (note-cpp)](https://img.shields.io/badge/Simulate-Wokwi_(note--cpp)-AAB42F?logo=espressif)](https://wokwi.com/projects/469739119860047873)
+[![Simulate in Wokwi (bridge)](https://img.shields.io/badge/Simulate-Wokwi_(bridge)-AAB42F?logo=espressif)](https://wokwi.com/projects/470467610960276481)
 
 A virtual Notecard library for [note-c](https://github.com/blues/note-arduino) and [note-cpp](https://github.com/m-mcgowan/note-cpp).  This provides a drop-in replacement in firmware projects, allowing you to prototype using a virtual Notecard until your physical Notecard is available. 
 
@@ -82,45 +83,26 @@ Once the credentials and project are configured
 
 When the example runs, you should see output like this:
 
-<!-- snippet:wokwi/esp32-notec/sample-output.txt:1-37 -->
+<!-- snippet:wokwi/esp32-notec/sample-output.txt:1-18 -->
 ```text
-press enter to start...
-note-emu benchmark
+note-emu on Wokwi (note-c)
 WiFi....... connected: 10.13.37.2
 note-emu: connecting to https://softcard.blues.com
 note-emu: resolving account UID from PAT via billing-accounts API
-note-emu: billing-accounts -> rc=0 http=200 [724 ms]
+note-emu: billing-accounts -> rc=0 http=200 [402 ms]
 note-emu: resolved account UID: 00000000-0000-0000-0000-000000000000
 note-emu: ready (uid=00000000-0000-0000-0000-000000000000)
-hub.set product=com.example.you:notec-demo mode=continuous... OK
-=== iteration 1/5 ===
-note-emu: POST /v1/write (46 bytes) -> rc=0 http=200 [685 ms]
-note-emu: POST /v1/read -> rc=0 http=200 bytes=384 [132 ms]
-PROFILE req=card.version total=1568
-  version = notecard-11.1.1.1301
-=== iteration 2/5 ===
-note-emu: POST /v1/write (46 bytes) -> rc=0 http=200 [123 ms]
-note-emu: POST /v1/read -> rc=0 http=200 bytes=384 [122 ms]
-PROFILE req=card.version total=246
-  version = notecard-11.1.1.1301
-=== iteration 3/5 ===
-note-emu: POST /v1/write (46 bytes) -> rc=0 http=200 [153 ms]
-note-emu: POST /v1/read -> rc=0 http=200 bytes=384 [112 ms]
-PROFILE req=card.version total=266
-  version = notecard-11.1.1.1301
-=== iteration 4/5 ===
-note-emu: POST /v1/write (46 bytes) -> rc=0 http=200 [163 ms]
-note-emu: POST /v1/read -> rc=0 http=200 bytes=384 [132 ms]
-PROFILE req=card.version total=296
-  version = notecard-11.1.1.1301
-=== iteration 5/5 ===
-note-emu: POST /v1/write (46 bytes) -> rc=0 http=200 [153 ms]
-note-emu: POST /v1/read -> rc=0 http=200 bytes=384 [132 ms]
-PROFILE req=card.version total=286
-  version = notecard-11.1.1.1301
+  > {"req":"hub.set","product":"com.example.you:notec-demo","mode":"continuous"}
+note-emu: POST /v1/write (99 bytes) -> rc=0 http=200 [498 ms]
+note-emu: POST /v1/read -> rc=0 http=200 bytes=26 [62 ms]
+  < {}
+hub.set: OK
+  > {"req":"card.version"}
+note-emu: POST /v1/write (24 bytes) -> rc=0 http=200 [122 ms]
+note-emu: POST /v1/read -> rc=0 http=200 bytes=369 [62 ms]
+  < {"version":"notecard-11.1.1.1301","device":"dev:soft:00000000-0000-0000-0000-000000000000","name":"Blues Wireless Notecard","sku":"NOTE-SOFTCARD","board":"0.0","cell":true,"body":{"org":"Blues Wireless","product":"Notecard","target":"ux","version":"notecard-ux-11.1.1","ver_major":11,"ver_minor":1,"ver_patch":1,"ver_build":1301,"built":"Dec 8 2025 10:13:37"}}
+card.version: notecard-11.1.1.1301
 READY
-Type a Notecard request as JSON and press Enter, e.g. {"req":"card.temp"}
->
 ```
 
 After this, you can freely type Notecard commands into the serial terminal to see the results.
@@ -184,11 +166,11 @@ The `platformio-notecpp` and `wokwi/esp32-notecpp` projects pull note-cpp from G
 
 If you want both APIs available in the same sketch — either to migrate a project incrementally from note-c to note-cpp, or to keep legacy raw-JSON call sites alongside new typed-API code — use note-cpp's [bridge mode](https://github.com/m-mcgowan/note-cpp/blob/main/docs/platforms/host/migration-from-note-c.md#bridge-mode-incremental-migration). note-emu ships a ready-to-use bridge helper in `<note/emu/note_cpp_bridge.hpp>`.
 
-The full working example is at [`examples/platformio-bridge/`](examples/platformio-bridge/) (built as part of CI). The relevant lines:
+The full working example is at [`wokwi/esp32-bridge/`](wokwi/esp32-bridge/) (built as part of CI). The relevant lines:
 
 **Includes:**
 
-<!-- snippet:coexistence-includes examples/platformio-bridge/src/main.cpp:18-26 -->
+<!-- snippet:coexistence-includes wokwi/esp32-bridge/src/main.cpp:18-26 -->
 ```cpp
 // Disable note-cpp's blanket `using namespace note;` — otherwise
 // note-arduino's global `Notecard` collides with note-cpp's
@@ -203,7 +185,7 @@ The full working example is at [`examples/platformio-bridge/`](examples/platform
 
 **Install both:**
 
-<!-- snippet:coexistence-install examples/platformio-bridge/src/main.cpp:59-66 -->
+<!-- snippet:coexistence-install wokwi/esp32-bridge/src/main.cpp:62-69 -->
 ```cpp
 // 1. note-c owns the transport (installs global serial hooks
 //    pointing at note-emu's virtual Notecard).
@@ -217,7 +199,7 @@ note::Api api(nc);
 
 **Use either API — both talk to the same virtual Notecard:**
 
-<!-- snippet:coexistence-usage examples/platformio-bridge/src/main.cpp:82-103 -->
+<!-- snippet:coexistence-usage wokwi/esp32-bridge/src/main.cpp:85-106 -->
 ```cpp
 // note-c: raw JSON API. Trace the request/response with JPrintUnformatted.
 J *req = NoteNewRequest("hub.set");

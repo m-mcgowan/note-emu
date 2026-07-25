@@ -225,7 +225,7 @@ that `note-cpp` documents against physical hardware. In bridge mode,
 
 Against `note-emu`, wire it via `installNoteC()` + `installNoteCppBridge()`
 (defined in `<note/emu/note_cpp_bridge.hpp>`). See
-[`examples/platformio-bridge/`](../examples/platformio-bridge/) for a
+[`wokwi/esp32-bridge/`](../wokwi/esp32-bridge/) for a
 runnable sketch.
 
 **Same pattern on physical hardware**: swap the `note-emu` softcard setup

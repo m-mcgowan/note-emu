@@ -23,18 +23,9 @@ note::emu::Arduino softcard(NOTEHUB_PAT);
 
 void setup() {
     Serial.begin(115200);
-    delay(1000);
+    delay(1500);  // give the serial monitor a moment to attach
 
-    // Wait for any character — gives time for serial monitor to connect
-    uint32_t last_prompt = 0;
-    while (Serial.read() == -1) {
-        if (millis() - last_prompt > 1000) {
-            Serial.println("press enter to start...");
-            last_prompt = millis();
-        }
-    }
-
-    Serial.println("note-emu benchmark");
+    Serial.println("note-emu on Wokwi (note-c)");
 
     // WiFi (Wokwi provides an open network)
     Serial.print("WiFi...");
@@ -56,51 +47,28 @@ void setup() {
         return;
     }
 
-    // Install note-c serial hooks. NoteSetFnDefault is required when
-    // using NoteSetFnSerial directly (notecard.begin() does this
-    // automatically, but we're using the raw note-c API here).
-    NoteSetFnDefault(malloc, free, delay, millis);
-    note_emu_set_global(softcard.instance());
-    NoteSetFnSerial(
-        note_emu_serial_reset,
-        note_emu_serial_transmit,
-        note_emu_serial_available,
-        note_emu_serial_receive
-    );
+    // Install note-c serial hooks in one call.
+    softcard.installNoteC();
 
-    // Optional: bind the virtual Notecard to a Notehub project so it appears
-    // under that project's Devices tab. Define NOTEHUB_PRODUCT in secrets.h
-    // (reverse-DNS ProductUID, e.g. "com.your-co.you:my-project") to enable.
-#ifdef NOTEHUB_PRODUCT
+    // Demo: hub.set + card.version, with the raw JSON traced.
     {
-        Serial.printf("hub.set product=%s mode=continuous...", NOTEHUB_PRODUCT);
         J *req = NoteNewRequest("hub.set");
-        JAddStringToObject(req, "product", NOTEHUB_PRODUCT);
+        JAddStringToObject(req, "product", "com.example.you:notec-demo");
         JAddStringToObject(req, "mode",    "continuous");
+        if (char *s = JPrintUnformatted(req)) { Serial.printf("  > %s\n", s); JFree(s); }
         J *rsp = NoteRequestResponse(req);
-        const char *err = rsp ? JGetString(rsp, "err") : "no response";
-        Serial.println((!err || !*err) ? " OK" : err);
+        if (char *s = JPrintUnformatted(rsp)) { Serial.printf("  < %s\n", s); JFree(s); }
+        Serial.printf("hub.set: %s\n",
+                      (rsp && !JGetString(rsp, "err")[0]) ? "OK" : "FAIL");
         NoteDeleteResponse(rsp);
     }
-#endif
-
-    // Run 5 iterations for a profiling comparison against the note-cpp version.
-    constexpr int ITERATIONS = 5;
-    for (int i = 1; i <= ITERATIONS; i++) {
-        Serial.printf("=== iteration %d/%d ===", i, ITERATIONS);
-        Serial.println();
-        uint32_t t0 = millis();
-        J *rsp = NoteRequestResponse(NoteNewRequest("card.version"));
-        uint32_t total = millis() - t0;
-        if (rsp) {
-            Serial.printf("PROFILE req=card.version total=%lu", total);
-            Serial.println();
-            Serial.printf("  version = %s", JGetString(rsp, "version"));
-            Serial.println();
-            NoteDeleteResponse(rsp);
-        } else {
-            Serial.println("  FAILED: no response");
-        }
+    {
+        J *req = NoteNewRequest("card.version");
+        if (char *s = JPrintUnformatted(req)) { Serial.printf("  > %s\n", s); JFree(s); }
+        J *rsp = NoteRequestResponse(req);
+        if (char *s = JPrintUnformatted(rsp)) { Serial.printf("  < %s\n", s); JFree(s); }
+        Serial.printf("card.version: %s\n", rsp ? JGetString(rsp, "version") : "FAIL");
+        NoteDeleteResponse(rsp);
     }
 
     Serial.println("READY");
@@ -123,14 +91,10 @@ void loop() {
                 if (!req) {
                     Serial.println("ERR: invalid JSON");
                 } else {
+                    if (char *s = JPrintUnformatted(req)) { Serial.printf("  > %s\n", s); JFree(s); }
                     J *rsp = NoteRequestResponse(req);
                     if (rsp) {
-                        char *json = JPrintUnformatted(rsp);
-                        if (json) {
-                            Serial.printf("RSP: %s", json);
-                            Serial.println();
-                            JFree(json);
-                        }
+                        if (char *s = JPrintUnformatted(rsp)) { Serial.printf("  < %s\n", s); JFree(s); }
                         NoteDeleteResponse(rsp);
                     } else {
                         Serial.println("ERR: no response");

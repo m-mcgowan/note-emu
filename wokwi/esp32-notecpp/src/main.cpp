@@ -26,13 +26,14 @@
 
 WiFiClientSecure wifiClient;
 note::emu::Arduino softcard(NOTEHUB_PAT);
+static note::Notecard *nc_ptr = nullptr;   // set in setup(), used by loop()
 
 // ── Setup ───────────────────────────────────────────────────────────
 
 void setup() {
     Serial.begin(115200);
-    delay(1000);
-    Serial.println("note-emu + note-cpp on Wokwi");
+    delay(1500);  // give the serial monitor a moment to attach
+    Serial.println("note-emu on Wokwi (note-cpp)");
 
     // WiFi
     Serial.print("WiFi...");
@@ -53,74 +54,64 @@ void setup() {
         return;
     }
 
-    // 2. Wire up the streaming transport stack
-    static note::emu::SerialHal hal(*softcard.instance(), millis, delay);
-    static note::link::SerialFramer<> serial_hal(hal);
-    static note::Protocol transport(serial_hal);
-    static note::Notecard nc(transport);
+    // 2. Wire up the streaming transport stack in one call.
+    auto &nc = note::emu::installNoteCpp(softcard);
+    nc_ptr = &nc;
+    note::Api api(nc);
 
-    // ── Per-transaction profiling ──────────────────────────────────
-    // Track phase start times and accumulate spans. On TransactionEnd,
-    // print a one-line summary of where time was spent.
-    struct Profile {
-        uint32_t txn_start = 0;
-        uint32_t reset_start = 0, reset_ms = 0;
-        uint32_t tx_start = 0,    tx_ms = 0;
-        uint32_t rx_start = 0,    rx_ms = 0;
-        uint32_t parse_start = 0, parse_ms = 0;
-    };
-    static Profile prof;
-
-    note::DebugListener listener;
-    listener.on_timing = [](note::TimingEvent ev, note::string_view req, void *) {
-        uint32_t now = millis();
-        using E = note::TimingEvent;
-        switch (ev) {
-            case E::TransactionBegin:
-                prof = {};
-                prof.txn_start = now;
-                break;
-            case E::ResetBegin:     prof.reset_start = now; break;
-            case E::ResetEnd:       prof.reset_ms += now - prof.reset_start; break;
-            case E::TransmitBegin:  prof.tx_start = now; break;
-            case E::TransmitEnd:    prof.tx_ms += now - prof.tx_start; break;
-            case E::ReceiveBegin:   prof.rx_start = now; break;
-            case E::ReceiveEnd:     prof.rx_ms += now - prof.rx_start; break;
-            case E::ParseBegin:     prof.parse_start = now; break;
-            case E::ParseEnd:       prof.parse_ms += now - prof.parse_start; break;
-            case E::TransactionEnd: {
-                uint32_t total = now - prof.txn_start;
-                Serial.printf(
-                    "PROFILE req=%.*s total=%lu reset=%lu tx=%lu rx=%lu parse=%lu",
-                    (int)req.size(), req.data(),
-                    total, prof.reset_ms, prof.tx_ms, prof.rx_ms, prof.parse_ms);
-                Serial.println();
-                break;
-            }
-            default: break;
-        }
+    // Trace raw JSON requests/responses via DebugListener::on_wire.
+    static note::DebugListener listener;
+    listener.on_wire = [](const note::WireEvent &e, void *) {
+        Serial.print(e.direction == note::WireDirection::Send ? "  > " : "  < ");
+        Serial.write(reinterpret_cast<const uint8_t *>(e.json.data()), e.json.size());
+        Serial.println();
     };
     nc.set_debug(listener);
 
-    // 3. Run multiple requests back-to-back to see how much of the
-    //    first-request cost is one-time (TLS handshake) vs persistent.
-    note::Api api(nc);
-    constexpr int ITERATIONS = 5;
-    for (int i = 1; i <= ITERATIONS; i++) {
-        Serial.printf("=== iteration %d/%d ===", i, ITERATIONS);
-        Serial.println();
-        if (auto r = api.card.version().execute(); r) {
-            Serial.print("  version = ");
-            Serial.println(r.version);
-        } else {
-            Serial.print("  FAILED: ");
-            Serial.println(r.error());
-        }
+    // Demo: hub.set + card.version, via the typed API (JSON traced by on_wire).
+    if (auto r = api.hub.set().product("com.example.you:notecpp-demo").mode("continuous").execute(); r) {
+        Serial.println("hub.set: OK");
+    } else {
+        Serial.print("hub.set FAILED: ");
+        Serial.println(r.error());
+    }
+    if (auto r = api.card.version().execute(); r) {
+        Serial.print("card.version: ");
+        Serial.println(r.version);
+    } else {
+        Serial.print("card.version FAILED: ");
+        Serial.println(r.error());
     }
 
     Serial.println("READY");
+    Serial.println("Type a Notecard request as JSON and press Enter, e.g. {\"req\":\"card.temp\"}");
+    Serial.print("> ");
 }
 
+// ── Loop (interactive serial command) ───────────────────────────────
+
+static char line_buf[1024];
+static size_t line_pos = 0;
+
 void loop() {
-    delay(10000);
+    if (!nc_ptr) return;
+
+    while (Serial.available()) {
+        char c = Serial.read();
+        if (c == '\n' || c == '\r') {
+            if (line_pos > 0) {
+                line_buf[line_pos] = '\0';
+                // on_wire hook prints the JSON request and response.
+                auto result = nc_ptr->transact(note::string_view(line_buf));
+                if (!result) {
+                    Serial.print("ERR: ");
+                    Serial.println(result.error());
+                }
+                line_pos = 0;
+                Serial.print("> ");
+            }
+        } else if (line_pos < sizeof(line_buf) - 1) {
+            line_buf[line_pos++] = c;
+        }
+    }
 }

@@ -17,3 +17,5 @@ note-emu-demo
 idf_component.yml
 *.wasm
 wokwi-api.h
+tools/sync-wokwi/node_modules/
+tools/sync-wokwi/.wokwi-auth.json

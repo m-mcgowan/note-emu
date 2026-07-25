@@ -37,16 +37,19 @@ note::emu::Arduino softcard(NOTEHUB_PAT);
 
 void setup() {
     Serial.begin(115200);
-    delay(1000);
-    Serial.println("note-emu bridge example (note-c + note-cpp)");
+    delay(1500);  // give the serial monitor a moment to attach
 
-    // WiFi
+    Serial.println("note-emu on Wokwi (bridge: note-c + note-cpp)");
+
+    // WiFi (Wokwi provides an open network)
+    Serial.print("WiFi...");
     WiFi.begin(WIFI_SSID, WIFI_PASS);
     while (WiFi.status() != WL_CONNECTED) {
         delay(500);
         Serial.print(".");
     }
-    Serial.printf("\nConnected: %s\n", WiFi.localIP().toString().c_str());
+    Serial.printf(" connected: %s", WiFi.localIP().toString().c_str());
+    Serial.println();
     wifiClient.setInsecure();
 
     // Connect to softcard
@@ -104,8 +107,43 @@ void setup() {
     // readme:end
 
     Serial.println("READY");
+    Serial.println("Type a Notecard request as JSON and press Enter, e.g. {\"req\":\"card.temp\"}");
+    Serial.print("> ");
 }
 
+// ── Loop (interactive serial command) ───────────────────────────────
+// Routes typed JSON through note-c (the shared transport). Because the
+// bridge already installed note-c hooks, we can call NoteRequestResponse
+// directly. In coexistence mode, either API would work; note-c is used
+// here so the loop mirrors the pure-note-c wokwi example.
+
+static char line_buf[1024];
+static size_t line_pos = 0;
+
 void loop() {
-    delay(10000);
+    while (Serial.available()) {
+        char c = Serial.read();
+        if (c == '\n' || c == '\r') {
+            if (line_pos > 0) {
+                line_buf[line_pos] = '\0';
+                J *req = JParse(line_buf);
+                if (!req) {
+                    Serial.println("ERR: invalid JSON");
+                } else {
+                    if (char *s = JPrintUnformatted(req)) { Serial.printf("  > %s\n", s); JFree(s); }
+                    J *rsp = NoteRequestResponse(req);
+                    if (rsp) {
+                        if (char *s = JPrintUnformatted(rsp)) { Serial.printf("  < %s\n", s); JFree(s); }
+                        NoteDeleteResponse(rsp);
+                    } else {
+                        Serial.println("ERR: no response");
+                    }
+                }
+                line_pos = 0;
+                Serial.print("> ");
+            }
+        } else if (line_pos < sizeof(line_buf) - 1) {
+            line_buf[line_pos++] = c;
+        }
+    }
 }
