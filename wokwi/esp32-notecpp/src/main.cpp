@@ -26,7 +26,7 @@
 
 WiFiClientSecure wifiClient;
 note::emu::Arduino softcard(NOTEHUB_PAT);
-static note::Notecard *nc_ptr = nullptr;   // set in setup(), used by loop()
+static note::emu::Notecard *nc_ptr = nullptr;   // set in setup(), used by loop()
 
 // ── Setup ───────────────────────────────────────────────────────────
 
@@ -55,27 +55,29 @@ void setup() {
     }
 
     // 2. Wire up the streaming transport stack in one call.
+    // `nc` is a note::NotecardApi — the typed API is directly accessible
+    // (nc.hub.set()..., nc.card.version()..., no separate note::Api needed).
     auto &nc = note::emu::installNoteCpp(softcard);
     nc_ptr = &nc;
-    note::Api api(nc);
 
     // Trace raw JSON requests/responses via DebugListener::on_wire.
+    // set_debug lives on the wrapped Notecard; reach it via .notecard().
     static note::DebugListener listener;
     listener.on_wire = [](const note::WireEvent &e, void *) {
         Serial.print(e.direction == note::WireDirection::Send ? "  > " : "  < ");
         Serial.write(reinterpret_cast<const uint8_t *>(e.json.data()), e.json.size());
         Serial.println();
     };
-    nc.set_debug(listener);
+    nc.notecard().set_debug(listener);
 
     // Demo: hub.set + card.version, via the typed API (JSON traced by on_wire).
-    if (auto r = api.hub.set().product("com.example.you:notecpp-demo").mode("continuous").execute(); r) {
+    if (auto r = nc.hub.set().product("com.example.you:notecpp-demo").mode("continuous").execute(); r) {
         Serial.println("hub.set: OK");
     } else {
         Serial.print("hub.set FAILED: ");
         Serial.println(r.error());
     }
-    if (auto r = api.card.version().execute(); r) {
+    if (auto r = nc.card.version().execute(); r) {
         Serial.print("card.version: ");
         Serial.println(r.version);
     } else {
@@ -102,7 +104,9 @@ void loop() {
             if (line_pos > 0) {
                 line_buf[line_pos] = '\0';
                 // on_wire hook prints the JSON request and response.
-                auto result = nc_ptr->transact(note::string_view(line_buf));
+                // Reach the wrapped Notecard for the buffer-less transact()
+                // that returns an OwnedBuffer.
+                auto result = nc_ptr->notecard().transact(note::string_view(line_buf));
                 if (!result) {
                     Serial.print("ERR: ");
                     Serial.println(result.error());

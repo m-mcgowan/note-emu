@@ -63,21 +63,22 @@ void setup() {
     //    pointing at note-emu's virtual Notecard).
     softcard.installNoteC();
 
-    // 2. note-cpp bridges on top of note-c. Returns a Notecard
+    // 2. note-cpp bridges on top of note-c. Returns a NotecardApi
     //    whose typed calls route through NoteRequestResponseJSON().
+    //    (nc.card.…, nc.hub.… are directly accessible.)
     auto &nc = note::emu::installNoteCppBridge(softcard);
-    note::Api api(nc);
     // readme:end
 
     // Wire up JSON tracing for note-cpp via DebugListener::on_wire.
     // note-c side traces are printed manually below via JPrintUnformatted.
+    // set_debug lives on the wrapped Notecard; reach it via .notecard().
     static note::DebugListener listener;
     listener.on_wire = [](const note::WireEvent &e, void *) {
         Serial.print(e.direction == note::WireDirection::Send ? "  > " : "  < ");
         Serial.write(reinterpret_cast<const uint8_t *>(e.json.data()), e.json.size());
         Serial.println();
     };
-    nc.set_debug(listener);
+    nc.notecard().set_debug(listener);
 
     // ── Both APIs now work against the same virtual Notecard ────────
 
@@ -96,7 +97,7 @@ void setup() {
     // note-cpp: typed API. JSON traces come out via DebugListener::on_wire
     // (installed above) — the `>` and `<` lines above each result show the
     // wire-format request and response.
-    auto v = api.card.version().execute();
+    auto v = nc.card.version().execute();
     if (v) {
         Serial.print("card.version (note-cpp): ");
         Serial.println(v.version);

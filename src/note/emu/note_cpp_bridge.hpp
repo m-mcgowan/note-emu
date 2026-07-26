@@ -24,11 +24,10 @@
 //   softcard.begin(wifiClient);
 //   softcard.installNoteC();                       // note-c owns transport
 //   auto &nc = note::emu::installNoteCppBridge(softcard);
-//   note::Api api(nc);
 //
 //   // Both APIs work against the same virtual Notecard:
 //   NoteRequestResponse(NoteNewRequest("card.version"));  // note-c
-//   api.card.version().execute();                         // note-cpp
+//   nc.card.version().execute();                          // note-cpp
 //
 // Requests do not overlap by natural single-threaded sketch flow. If
 // you use RTOS tasks, coordinate access as you would with a physical
@@ -102,25 +101,30 @@ private:
     NoopHal     hal_;
 };
 
-// Owns the note-cpp bridge chain: NoteCBridge + CjsonBackend + Notecard.
+// Owns the note-cpp bridge chain: CjsonBackend + NoteCBridge + NotecardApi.
 // Softcard must already have `installNoteC()` called on it (or the caller
 // must have wired note-c's serial hooks by other means) before use.
+//
+// Exposes a note::NotecardApi so `stack.notecard.card.version().execute()`
+// works directly — mirroring note::arduino::Notecard for symmetry.
 struct BridgeStack {
     note::backends::CjsonBackend backend;
     NoteCBridge                  bridge;
-    note::Notecard               notecard;
+    Notecard                     notecard;
 
     BridgeStack() : notecard(backend, bridge) {}
 };
 
 // Install note-cpp as a bridge on top of note-c. Returns a reference to
-// the ready-to-use Notecard.
+// a note::NotecardApi — the typed API surface is directly accessible
+// (`nc.card.version().execute()`, `nc.hub.set()…`) with no wrapping
+// `note::Api` needed.
 //
 // Note: this expects note-c's transport (NoteSetFnSerial + friends) to
 // already be wired to `softcard`. Auto-installs by calling
 // `softcard.installNoteC()`; call is idempotent, so if you already
 // installed note-c explicitly the extra call is harmless.
-inline note::Notecard &installNoteCppBridge(Arduino &softcard) {
+inline Notecard &installNoteCppBridge(Arduino &softcard) {
     softcard.installNoteC();
     static BridgeStack stack;
     return stack.notecard;

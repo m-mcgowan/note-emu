@@ -43,15 +43,25 @@
 
 namespace note::emu {
 
+// Convenience alias so users don't need to write template syntax.
+// `note::emu::Notecard` is the note-cpp NotecardApi (typed API surface +
+// wrapped Notecard). Same shape as `note::arduino::Notecard` for physical
+// hardware — mirrors that so sketches read the same either way.
+using Notecard = note::NotecardApi<>;
+
 // Owns the note-cpp streaming transport chain built on top of a note-emu
-// softcard transport: SerialHal → SerialFramer → Protocol → Notecard.
+// softcard transport: SerialHal → SerialFramer → Protocol → NotecardApi.
 // Constructed after Arduino::begin() succeeds; must outlive any use of
-// the contained Notecard.
+// the contained NotecardApi.
+//
+// Exposes a note::NotecardApi (rather than a raw note::Notecard), so
+// `stack.notecard.card.version().execute()` works directly — mirroring
+// the note::arduino::Notecard shape that physical hardware uses.
 struct TransportStack {
     SerialHal                  hal;
     note::link::SerialFramer<> framer;
     note::Protocol             transport;
-    note::Notecard             notecard;
+    Notecard                   notecard;
 
 #ifdef ARDUINO
     explicit TransportStack(
@@ -60,8 +70,10 @@ struct TransportStack {
         SerialHal::DelayFn  delay_fn  = _default_delay)
       : hal(*softcard.instance(), millis_fn, delay_fn),
         framer(hal),
-        transport(framer),
-        notecard(transport) {}
+        transport(framer)
+    {
+        notecard.begin(transport);
+    }
 
 private:
     static uint32_t _default_millis() { return ::millis(); }
@@ -70,14 +82,16 @@ private:
 };
 
 #ifdef ARDUINO
-// Install as note-cpp streaming transport. Returns a reference to the
-// constructed Notecard, ready to use with note::Api or directly.
-// Must be called after Arduino::begin() succeeds.
+// Install as note-cpp streaming transport. Returns a reference to a
+// note::NotecardApi — the typed API surface is directly accessible
+// (`nc.card.version().execute()`, `nc.hub.set()…`) with no wrapping
+// `note::Api` needed. Same call shape as physical `note::arduino::Notecard`.
 //
-// Storage for the transport stack is function-static — intended for the
-// common one-softcard-per-sketch case. If you need multiple softcard
-// instances or explicit ownership, construct a TransportStack yourself.
-inline note::Notecard &installNoteCpp(Arduino &softcard) {
+// Must be called after Arduino::begin() succeeds. Storage is
+// function-static — intended for the common one-softcard-per-sketch
+// case. For multiple softcards or explicit ownership, construct a
+// TransportStack yourself.
+inline Notecard &installNoteCpp(Arduino &softcard) {
     static TransportStack stack(softcard);
     return stack.notecard;
 }

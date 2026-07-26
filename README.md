@@ -191,15 +191,15 @@ The full working example is at [`wokwi/esp32-bridge/`](wokwi/esp32-bridge/) (bui
 //    pointing at note-emu's virtual Notecard).
 softcard.installNoteC();
 
-// 2. note-cpp bridges on top of note-c. Returns a Notecard
+// 2. note-cpp bridges on top of note-c. Returns a NotecardApi
 //    whose typed calls route through NoteRequestResponseJSON().
+//    (nc.card.…, nc.hub.… are directly accessible.)
 auto &nc = note::emu::installNoteCppBridge(softcard);
-note::Api api(nc);
 ```
 
 **Use either API — both talk to the same virtual Notecard:**
 
-<!-- snippet:coexistence-usage wokwi/esp32-bridge/src/main.cpp:85-106 -->
+<!-- snippet:coexistence-usage wokwi/esp32-bridge/src/main.cpp:86-107 -->
 ```cpp
 // note-c: raw JSON API. Trace the request/response with JPrintUnformatted.
 J *req = NoteNewRequest("hub.set");
@@ -215,7 +215,7 @@ NoteDeleteResponse(rsp);
 // note-cpp: typed API. JSON traces come out via DebugListener::on_wire
 // (installed above) — the `>` and `<` lines above each result show the
 // wire-format request and response.
-auto v = api.card.version().execute();
+auto v = nc.card.version().execute();
 if (v) {
     Serial.print("card.version (note-cpp): ");
     Serial.println(v.version);
