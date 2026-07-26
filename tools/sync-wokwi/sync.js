@@ -226,6 +226,58 @@ async function saveProject(page) {
 }
 
 // ────────────────────────────────────────────────────────────────────────────
+// Build-trigger helper.
+//
+// Wokwi's "Start Simulation" button kicks off a compile + run. We watch
+// for either a success signal (simulator terminal appears / firmware
+// starts writing) or an error signal ("error:" / "Error during build" /
+// "compilation failed") in Wokwi's build status panel.
+// ────────────────────────────────────────────────────────────────────────────
+async function tryBuildProject(page, projectName) {
+    // Try to find the Start Simulation button.
+    const startSelectors = [
+        'button:has-text("Start Simulation")',
+        'button[aria-label*="Start Simulation" i]',
+        'button[aria-label*="start" i]',
+        '.wokwi-play-button',
+    ];
+    let startBtn = null;
+    for (const sel of startSelectors) {
+        const btn = page.locator(sel).first();
+        if (await btn.isVisible({ timeout: 500 }).catch(() => false)) {
+            startBtn = btn;
+            break;
+        }
+    }
+    if (!startBtn) {
+        return { ok: false, reason: 'could not locate Start Simulation button' };
+    }
+
+    await startBtn.click().catch(() => {});
+
+    // Race between success and failure signals over ~40s.
+    const deadline = Date.now() + 40_000;
+    while (Date.now() < deadline) {
+        await page.waitForTimeout(1_500);
+        // Snapshot visible page text via evaluate — cheap way to look for
+        // build success/failure markers without knowing the exact panel.
+        const text = await page.evaluate(() => document.body.innerText || '');
+        // Success signals from note-emu sketches ("press enter", "WiFi...",
+        // "note-emu on Wokwi", "note-emu benchmark") — any of these means
+        // compilation succeeded and the firmware is running.
+        if (/note-emu (on Wokwi|benchmark|bridge)|press enter to start|WiFi\.\.\./i.test(text)) {
+            return { ok: true, reason: 'simulator running' };
+        }
+        // Failure signals from the Wokwi build console.
+        const errMatch = text.match(/(Error during build|compilation failed|fatal error:[^\n]{0,200}|error:[^\n]{0,200}|undefined reference to[^\n]{0,200})/i);
+        if (errMatch) {
+            return { ok: false, reason: errMatch[1].trim() };
+        }
+    }
+    return { ok: false, reason: 'timeout — no build success or error signal within 40s' };
+}
+
+// ────────────────────────────────────────────────────────────────────────────
 // Project-lock handling.
 //
 // Wokwi projects can be "locked" from a dropdown menu (the "Lock project"
@@ -418,16 +470,16 @@ async function syncProject(context, project, opts) {
         changed++;
     }
 
-    // Post-sync verify: reload the project page to bypass Monaco's in-memory
-    // buffer, then re-read each just-updated file's content from what
-    // Wokwi's server actually returns. Catches saves that were silently
-    // dropped (e.g. by Wokwi's project-lock mechanism).
-    if (changed > 0 && !opts.dryRun) {
-        console.log(`  reloading to verify server-side content…`);
+    // Reload + verify each expected file's content against server.
+    // Extracted so we can call it both after save (to confirm the save
+    // reached the server) and again after re-lock (to catch any race
+    // with a concurrent editor during the unlock window).
+    const verifyServerContent = async (label) => {
+        console.log(`  ${label}…`);
         await page.reload();
         await page.waitForSelector('.monaco-editor', { timeout: 30_000 });
         await page.waitForTimeout(2_000);
-
+        let failed = 0;
         for (const file of project.files) {
             const localPath = path.join(REPO_ROOT, file.local);
             if (!fs.existsSync(localPath)) continue;
@@ -438,14 +490,21 @@ async function syncProject(context, project, opts) {
             await clickWokwiTab(page, file.wokwi);
             const serverContent = await getEditorContent(page);
             if (serverContent === localContent) {
-                console.log(`    ✓ persisted: ${file.wokwi}`);
+                console.log(`    ✓ ${file.wokwi}`);
             } else {
                 const serverLines = serverContent?.split('\n').length ?? '?';
-                console.error(`    ✗ NOT PERSISTED: ${file.wokwi} (server: ${serverLines} lines, expected: ${localContent.split('\n').length} lines)`);
-                verifyFailed++;
-                changed--;
+                console.error(`    ✗ MISMATCH: ${file.wokwi} (server: ${serverLines} lines, expected: ${localContent.split('\n').length} lines)`);
+                failed++;
             }
         }
+        return failed;
+    };
+
+    // Post-save verify (catches silent-drop saves e.g. locked project).
+    if (changed > 0 && !opts.dryRun) {
+        const saveFailed = await verifyServerContent('reloading to verify server-side content');
+        verifyFailed += saveFailed;
+        changed -= saveFailed;
     }
 
     // Re-lock the project if we unlocked it.
@@ -453,8 +512,33 @@ async function syncProject(context, project, opts) {
         await relockProject(page);
     }
 
+    // Post-lock re-verify: catches races where a concurrent editor
+    // changed something during our unlock window. Only runs if we
+    // actually wrote something (otherwise there's nothing to protect).
+    if (changed > 0 && !opts.dryRun && weUnlocked) {
+        const raceFailed = await verifyServerContent('post-lock re-verify (race check)');
+        verifyFailed += raceFailed;
+        changed -= raceFailed;
+        if (raceFailed > 0) {
+            console.error(`  ⚠ ${raceFailed} file(s) differ post-lock — concurrent editor may have changed them during the unlock window`);
+        }
+    }
+
+    // Optional: kick off a build in the hosted Wokwi to verify the
+    // sketch actually compiles against the pinned libraries.
+    let buildStatus = null;
+    if (opts.build && !opts.dryRun) {
+        console.log('  building on Wokwi…');
+        buildStatus = await tryBuildProject(page, project.name);
+        if (buildStatus.ok) {
+            console.log(`    ✓ build OK — ${buildStatus.reason}`);
+        } else {
+            console.error(`    ✗ build FAILED — ${buildStatus.reason}`);
+        }
+    }
+
     await page.close();
-    return { changed, unchanged, skipped, verifyFailed };
+    return { changed, unchanged, skipped, verifyFailed, buildStatus };
 }
 
 async function main() {
@@ -463,6 +547,7 @@ async function main() {
     const debug = argv.includes('--debug');
     const login = argv.includes('--login');
     const showDiff = argv.includes('--show-diff');
+    const build = argv.includes('--build');
     const projectFilter = argv.find(a => !a.startsWith('--'));
 
     if (login) {
@@ -487,7 +572,7 @@ async function main() {
     const totals = { changed: 0, unchanged: 0, skipped: 0, verifyFailed: 0 };
     for (const project of PROJECTS) {
         if (projectFilter && !project.name.includes(projectFilter)) continue;
-        const s = await syncProject(context, project, { dryRun, debug, showDiff });
+        const s = await syncProject(context, project, { dryRun, debug, showDiff, build });
         totals.changed += s.changed;
         totals.unchanged += s.unchanged;
         totals.skipped += s.skipped;
