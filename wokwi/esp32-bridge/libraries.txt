@@ -1,6 +1,6 @@
 # Wokwi Library List
 # See https://docs.wokwi.com/guides/libraries
 
-note-emu@0.3.2
+note-emu@0.3.3
 note-cpp@0.3.4
 Blues Wireless Notecard

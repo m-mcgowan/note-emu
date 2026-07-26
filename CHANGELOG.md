@@ -3,6 +3,15 @@
 All notable changes to this project will be documented in this file.
 Follows [Keep a Changelog](https://keepachangelog.com/) conventions.
 
+## [0.3.3] - 2026-07-26
+
+### Changed
+- `note::emu::installNoteCpp()` and `installNoteCppBridge()` now return a `note::NotecardApi` (aliased as `note::emu::Notecard`) instead of a bare `note::Notecard`. The typed API surface is directly accessible — `nc.card.version().execute()`, `nc.hub.set()...execute()`, etc. — with no wrapping `note::Api api(nc);` required. This matches `note::arduino::Notecard`'s call shape for physical hardware, so the transport-swap between virtual and physical is a genuine one-line change with no application-code delta.
+- `TransportStack.notecard` and `BridgeStack.notecard` are now `note::NotecardApi<>` (aliased as `note::emu::Notecard`).
+
+### Migration
+Sketches calling `nc.card.…` / `nc.hub.…` directly on the return of `installNoteCpp()` / `installNoteCppBridge()` need no changes. Sketches that constructed a separate `note::Api api(nc);` can drop that line and call `nc.…` directly. To reach the wrapped `note::Notecard` (e.g. for `set_debug()` or the buffer-less `transact()`), use `nc.notecard()`.
+
 ## [0.3.2] - 2026-07-24
 
 ### Added
