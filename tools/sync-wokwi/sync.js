@@ -285,30 +285,34 @@ async function unlockProjectIfNeeded(page) {
     return isLocked;
 }
 
-// Print a small unified-ish diff between two text blocks.
-// Not a full LCS diff — just marks added/removed/context runs. Good
-// enough for eyeballing what would change during --dry-run.
+// Print a line-aligned diff between two text blocks.
+// Not a full LCS diff — just pairs up lines by index and marks
+// differing rows with -/+. Elides runs of matching lines. Good enough
+// for eyeballing what would change during --dry-run, and immune to
+// pathological inputs (always terminates).
 function printDiff(oldText, newText, label) {
     const a = (oldText || '').split('\n');
     const b = (newText || '').split('\n');
     console.log(`  --- ${label} (wokwi)`);
     console.log(`  +++ ${label} (local)`);
-    // Trivial diff: line-by-line, mark differing regions.
-    let i = 0, j = 0;
-    while (i < a.length || j < b.length) {
-        if (i < a.length && j < b.length && a[i] === b[j]) {
-            // Context — show up to 1 line, then elide.
-            console.log(`    ${a[i]}`);
-            i++; j++;
-        } else {
-            // Find the next matching pair to bound the diff hunk.
-            let ni = i, nj = j;
-            while (ni < a.length && !b.slice(nj, nj + 20).includes(a[ni])) ni++;
-            while (nj < b.length && !a.slice(i, i + 20).includes(b[nj])) nj++;
-            for (let k = i; k < ni; k++) console.log(`  - ${a[k]}`);
-            for (let k = j; k < nj; k++) console.log(`  + ${b[k]}`);
-            i = ni; j = nj;
+    const maxLen = Math.max(a.length, b.length);
+    let elided = 0;
+    for (let i = 0; i < maxLen; i++) {
+        const oldLine = a[i];
+        const newLine = b[i];
+        if (oldLine === newLine) {
+            elided++;
+            continue;
         }
+        if (elided > 0) {
+            console.log(`    … (${elided} matching line${elided === 1 ? '' : 's'})`);
+            elided = 0;
+        }
+        if (oldLine !== undefined) console.log(`  - ${oldLine}`);
+        if (newLine !== undefined) console.log(`  + ${newLine}`);
+    }
+    if (elided > 0) {
+        console.log(`    … (${elided} matching line${elided === 1 ? '' : 's'})`);
     }
 }
 
