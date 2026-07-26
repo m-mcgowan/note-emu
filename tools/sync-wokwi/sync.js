@@ -470,16 +470,16 @@ async function syncProject(context, project, opts) {
         changed++;
     }
 
-    // Reload + verify each expected file's content against server.
-    // Extracted so we can call it both after save (to confirm the save
-    // reached the server) and again after re-lock (to catch any race
-    // with a concurrent editor during the unlock window).
-    const verifyServerContent = async (label) => {
-        console.log(`  ${label}…`);
+    // Post-save verify: reload the project page to bypass Monaco's
+    // in-memory buffer, then re-read each just-updated file's content
+    // from what Wokwi's server actually returns. Catches saves that
+    // were silently dropped (e.g. by Wokwi's project-lock mechanism).
+    if (changed > 0 && !opts.dryRun) {
+        console.log('  reloading to verify server-side content…');
         await page.reload();
         await page.waitForSelector('.monaco-editor', { timeout: 30_000 });
         await page.waitForTimeout(2_000);
-        let failed = 0;
+
         for (const file of project.files) {
             const localPath = path.join(REPO_ROOT, file.local);
             if (!fs.existsSync(localPath)) continue;
@@ -490,38 +490,19 @@ async function syncProject(context, project, opts) {
             await clickWokwiTab(page, file.wokwi);
             const serverContent = await getEditorContent(page);
             if (serverContent === localContent) {
-                console.log(`    ✓ ${file.wokwi}`);
+                console.log(`    ✓ persisted: ${file.wokwi}`);
             } else {
                 const serverLines = serverContent?.split('\n').length ?? '?';
-                console.error(`    ✗ MISMATCH: ${file.wokwi} (server: ${serverLines} lines, expected: ${localContent.split('\n').length} lines)`);
-                failed++;
+                console.error(`    ✗ NOT PERSISTED: ${file.wokwi} (server: ${serverLines} lines, expected: ${localContent.split('\n').length} lines)`);
+                verifyFailed++;
+                changed--;
             }
         }
-        return failed;
-    };
-
-    // Post-save verify (catches silent-drop saves e.g. locked project).
-    if (changed > 0 && !opts.dryRun) {
-        const saveFailed = await verifyServerContent('reloading to verify server-side content');
-        verifyFailed += saveFailed;
-        changed -= saveFailed;
     }
 
     // Re-lock the project if we unlocked it.
     if (weUnlocked) {
         await relockProject(page);
-    }
-
-    // Post-lock re-verify: catches races where a concurrent editor
-    // changed something during our unlock window. Only runs if we
-    // actually wrote something (otherwise there's nothing to protect).
-    if (changed > 0 && !opts.dryRun && weUnlocked) {
-        const raceFailed = await verifyServerContent('post-lock re-verify (race check)');
-        verifyFailed += raceFailed;
-        changed -= raceFailed;
-        if (raceFailed > 0) {
-            console.error(`  ⚠ ${raceFailed} file(s) differ post-lock — concurrent editor may have changed them during the unlock window`);
-        }
     }
 
     // Optional: kick off a build in the hosted Wokwi to verify the
