@@ -255,8 +255,10 @@ async function tryBuildProject(page, projectName) {
 
     await startBtn.click().catch(() => {});
 
-    // Race between success and failure signals over ~40s.
-    const deadline = Date.now() + 40_000;
+    // Race between success and failure signals over ~120s. Wokwi's
+    // first fetch of a newly-released library version can take a
+    // while as their build service warms its cache.
+    const deadline = Date.now() + 120_000;
     while (Date.now() < deadline) {
         await page.waitForTimeout(1_500);
         // Snapshot visible page text via evaluate — cheap way to look for
